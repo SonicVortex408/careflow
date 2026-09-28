@@ -1,0 +1,18 @@
+# Environment variables
+.env
+
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# FAISS generated index
+faiss_index/
+
+# Node
+node_modules/
+
+# Logs
+*.log

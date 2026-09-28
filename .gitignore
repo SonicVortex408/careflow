@@ -1,0 +1,36 @@
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# AI generated files
+faiss_index/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CareFlow generated medical document data
+ai-service/patient_documents/
+ai-service/patient_faiss/
+
+# Uploaded backend files
+backend/uploads/
+
+# Local test medical documents
+backend/test-report.txt
+# Research PDFs used for local RAG testing
+ai-service/sample_docs/knowledge-base/*.pdf
