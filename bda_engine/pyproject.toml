@@ -16,12 +16,16 @@ dependencies = [
     "reportlab>=4.2.0",
     "pillow>=10.4.0",
     "typer>=0.13.0",
+    "pymupdf>=1.24.0",  # scan_simulate.py: rasterize rendered PDFs to
+                         # simulate scanned/photographed input
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=8.3.0",
     "ruff>=0.7.0",
+    "pdfplumber>=0.11.0",  # verifies render_pdf.py output is actually
+                            # text-extractable; not needed at runtime
 ]
 
 [project.optional-dependencies]
