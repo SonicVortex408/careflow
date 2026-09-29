@@ -94,3 +94,9 @@ class TestPrepareForOcr:
         assert len(pages) >= 1
         for p in pages:
             assert p.image.ndim == 3
+
+    def test_runs_end_to_end_on_a_raw_image_upload(self, scanned_png_factory):
+        png_path, _, _ = scanned_png_factory()
+        pages = prepare_for_ocr(png_path, dpi=150)
+        assert len(pages) == 1
+        assert pages[0].image.ndim == 3

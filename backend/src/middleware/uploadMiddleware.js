@@ -29,6 +29,11 @@ const fileFilter = (req, file, cb) => {
     const allowedTypes = [
         "application/pdf",
         "text/plain",
+        // Week 2: scanned/photographed lab reports have no PDF
+        // wrapper -- app/ocr/raster.py + tesseract_engine.py on the
+        // ai-service side can OCR a plain image directly.
+        "image/png",
+        "image/jpeg",
     ];
 
     if (allowedTypes.includes(file.mimetype)) {
@@ -36,7 +41,7 @@ const fileFilter = (req, file, cb) => {
     } else {
         cb(
             new Error(
-                "Only PDF and text files are allowed"
+                "Only PDF, text, PNG, and JPEG files are allowed"
             ),
             false
         );

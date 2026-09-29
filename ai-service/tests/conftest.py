@@ -66,3 +66,21 @@ def scanned_pdf_factory(clean_pdf_factory, tmp_path_factory):
         return scanned_path, clean_path, rows
 
     return _make
+
+
+@pytest.fixture(scope="session")
+def scanned_png_factory(clean_pdf_factory, tmp_path_factory):
+    """Same degradation pipeline as scanned_pdf_factory, but returns a
+    raw PNG (no PDF wrapper) -- for the image-upload path
+    (backend/src/middleware/uploadMiddleware.js accepts image/png,
+    image/jpeg as of Week 2). Returns (png_path, clean_path, rows)."""
+
+    from bda_engine.generate.scan_simulate import simulate_scan_as_images
+
+    def _make(**kwargs):
+        clean_path, rows = clean_pdf_factory(**kwargs)
+        out_dir = tmp_path_factory.mktemp("scanned_png")
+        png_paths = simulate_scan_as_images(clean_path, out_dir, random.Random(1), dpi=200)
+        return png_paths[0], clean_path, rows
+
+    return _make

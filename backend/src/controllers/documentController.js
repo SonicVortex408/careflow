@@ -4,6 +4,17 @@ import env from "../config/env.js";
 
 const AI_SERVICE_URL = env.aiServiceUrl;
 
+// Maps a Celery job state (app/api/ocr.py's GET /api/ocr/jobs/:id) to
+// this project's Document.status enum. Exported for
+// tests/documentController.test.js -- kept as a pure function
+// specifically so it's testable without a database or HTTP layer.
+export function mapJobStateToStatus(jobState) {
+    if (jobState === "SUCCESS") return "ready";
+    if (jobState === "FAILURE") return "failed";
+    if (jobState === "STARTED") return "ocr_running";
+    return "queued"; // PENDING, RETRY, or anything else -- still in flight
+}
+
 export async function uploadDocument(req, res) {
     let document = null;
 
@@ -29,9 +40,19 @@ export async function uploadDocument(req, res) {
             mimeType: req.file.mimetype,
             size: req.file.size,
             storagePath: req.file.path,
-            status: "processing",
+            status: "queued",
         });
 
+        // multer's 10 MB limit (uploadMiddleware.js) keeps a full
+        // in-memory read bounded; true zero-copy streaming would need
+        // the `form-data` package (not currently a dependency) to
+        // stream a Node Readable into the multipart body instead of
+        // buffering it into a Blob first. Left as a documented
+        // possible follow-up rather than added now -- the change that
+        // actually matters here is below: this request no longer
+        // *waits* for OCR/normalization to finish (see the 202
+        // response), which was the real "blocks the Express request"
+        // problem, not this buffer.
         const fileBuffer = fs.readFileSync(req.file.path);
 
         const formData = new FormData();
@@ -59,8 +80,13 @@ export async function uploadDocument(req, res) {
             document._id.toString()
         );
 
+        // POST /api/ocr enqueues and returns 202 immediately -- this
+        // fetch resolves as soon as the job is queued, not once OCR
+        // and normalization have finished (that was the old
+        // POST /api/documents/process contract, which held this
+        // Express request open for the full processing time).
         const aiResponse = await fetch(
-            `${AI_SERVICE_URL}/api/documents/process`,
+            `${AI_SERVICE_URL}/api/ocr/`,
             {
                 method: "POST",
                 body: formData,
@@ -71,7 +97,7 @@ export async function uploadDocument(req, res) {
             const errorText = await aiResponse.text();
 
             throw new Error(
-                `AI document processing failed: ${aiResponse.status} ${errorText}`
+                `AI document enqueue failed: ${aiResponse.status} ${errorText}`
             );
         }
 
@@ -80,16 +106,16 @@ export async function uploadDocument(req, res) {
         if (!result.success) {
             throw new Error(
                 result.message ||
-                "AI document processing failed"
+                "AI document enqueue failed"
             );
         }
 
-        document.status = "ready";
+        document.jobId = result.job_id;
         await document.save();
 
-        return res.status(201).json({
+        return res.status(202).json({
             success: true,
-            message: "Document uploaded and processed successfully",
+            message: "Document uploaded and queued for processing",
             document: {
                 id: document._id,
                 originalName: document.originalName,
@@ -98,12 +124,13 @@ export async function uploadDocument(req, res) {
                 status: document.status,
                 uploadedAt: document.createdAt,
             },
-            processing: result,
+            jobId: result.job_id,
+            statusUrl: `/api/ai/documents/${document._id}/status`,
         });
 
     } catch (error) {
         console.error(
-            "Document upload/processing error:",
+            "Document upload/enqueue error:",
             error
         );
 
@@ -122,6 +149,73 @@ export async function uploadDocument(req, res) {
         return res.status(500).json({
             success: false,
             message: "Unable to process document",
+        });
+    }
+}
+
+export async function getDocumentStatus(req, res) {
+    try {
+        const document = await Document.findOne({
+            _id: req.params.id,
+            user: req.account._id,
+        });
+
+        if (!document) {
+            return res.status(404).json({
+                success: false,
+                message: "Document not found",
+            });
+        }
+
+        if (!document.jobId || ["ready", "failed"].includes(document.status)) {
+            // Already resolved (or never got a job -- e.g. a row
+            // written before the Week 2 pipeline existed): nothing to
+            // poll, return what's in Mongo.
+            return res.json({
+                success: true,
+                document: {
+                    id: document._id,
+                    status: document.status,
+                    originalName: document.originalName,
+                },
+            });
+        }
+
+        const jobResponse = await fetch(
+            `${AI_SERVICE_URL}/api/ocr/jobs/${document.jobId}`
+        );
+
+        if (!jobResponse.ok) {
+            return res.status(502).json({
+                success: false,
+                message: "Unable to reach ai-service for job status",
+            });
+        }
+
+        const job = await jobResponse.json();
+        const newStatus = mapJobStateToStatus(job.state);
+
+        if (newStatus !== document.status) {
+            document.status = newStatus;
+            await document.save();
+        }
+
+        return res.json({
+            success: true,
+            document: {
+                id: document._id,
+                status: document.status,
+                originalName: document.originalName,
+            },
+            job,
+        });
+
+    } catch (error) {
+        console.error("Document status check error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to check document status",
         });
     }
 }

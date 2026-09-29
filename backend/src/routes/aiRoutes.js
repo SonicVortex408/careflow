@@ -9,7 +9,8 @@ import {
 import upload from "../middleware/uploadMiddleware.js";
 
 import {
-    uploadDocument
+    uploadDocument,
+    getDocumentStatus
 } from "../controllers/documentController.js";
 
 const router = express.Router();
@@ -20,6 +21,12 @@ router.post(
     protect,
     upload.single("document"),
     uploadDocument
+);
+
+router.get(
+    "/documents/:id/status",
+    protect,
+    getDocumentStatus
 );
 
 router.post(

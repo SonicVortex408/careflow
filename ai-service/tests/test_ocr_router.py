@@ -38,3 +38,14 @@ class TestInspectDocument:
             path, _ = clean_pdf_factory(layout=layout, seed=2)
             info = inspect_document(path)
             assert info.has_text_layer is True, layout
+
+    def test_raw_scanned_image_has_no_text_layer(self, scanned_png_factory):
+        # A raw PNG upload (no PDF wrapper) -- the multer allowlist in
+        # backend/src/middleware/uploadMiddleware.js accepts image/png
+        # and image/jpeg as of Week 2 specifically because PyMuPDF
+        # opens an image file directly as a one-page pseudo-document;
+        # confirms that actually works, not just for PDFs.
+        png_path, _, _ = scanned_png_factory()
+        info = inspect_document(png_path)
+        assert info.has_text_layer is False
+        assert info.page_count == 1
