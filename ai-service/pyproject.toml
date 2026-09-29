@@ -1,7 +1,7 @@
 [project]
 name = "ai-service"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.2.0"
+description = "careFlow ai-service: RAG chat agent, document/OCR ingestion, and LOINC/unit normalization."
 readme = "README.md"
 authors = [
     { name = "james", email = "joshuanaidu313@gmail.com" }
@@ -21,10 +21,58 @@ dependencies = [
     "python-multipart>=0.0.32",
     "sentence-transformers>=6.0.1",
     "uvicorn[standard]>=0.52.4",
+    "pydantic-settings>=2.6.0",
+
+    # --- Week 2: async ingestion queue ---
+    "celery[redis]>=5.4.0",
+    "redis>=5.2.0",
+
+    # --- Week 2: OCR / layout parsing ---
+    "pymupdf>=1.24.0",       # text-layer detection + rasterization, no system binary
+    "pdfplumber>=0.11.0",    # text-layer table extraction, no system binary
+    "pytesseract>=0.3.13",   # wraps the Tesseract *binary* -- must be installed
+                              # separately on the host/image (see README.md)
+    "opencv-python-headless>=4.10.0",  # deskew/denoise for the scanned path
+    "pillow>=10.4.0",
+    "python-dateutil>=2.9.0",
+
+    # --- Week 3: entity/unit normalization ---
+    "rapidfuzz>=3.10.0",
+    "pyyaml>=6.0.2",
 ]
 
-[project.scripts]
-ai-service = "ai_service:main"
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",  # required by starlette.testclient.TestClient
+    "ruff>=0.7.0",
+]
+
+[project.optional-dependencies]
+# Off by default (OCR_ENGINE=tesseract). Large wheels; installed only when
+# OCR_ENGINE=paddle is actually needed. See ARCHITECTURE.md decision 6.
+paddle = [
+    "paddleocr>=2.9.0",
+    "paddlepaddle>=2.6.0",
+]
+# Off by default (ENABLE_LAYOUTLMV3=false). torch/transformers are already
+# transitive deps of sentence-transformers; this extra pulls the specific
+# LayoutLMv3 processor/model classes.
+layoutlm = [
+    "transformers>=4.45.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]

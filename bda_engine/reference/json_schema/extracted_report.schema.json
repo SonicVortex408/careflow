@@ -1,0 +1,565 @@
+{
+  "$defs": {
+    "BBox": {
+      "additionalProperties": false,
+      "properties": {
+        "x0": {
+          "title": "X0",
+          "type": "number"
+        },
+        "y0": {
+          "title": "Y0",
+          "type": "number"
+        },
+        "x1": {
+          "title": "X1",
+          "type": "number"
+        },
+        "y1": {
+          "title": "Y1",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x0",
+        "y0",
+        "x1",
+        "y1"
+      ],
+      "title": "BBox",
+      "type": "object"
+    },
+    "Comparator": {
+      "enum": [
+        "<",
+        ">",
+        "=",
+        "none"
+      ],
+      "title": "Comparator",
+      "type": "string"
+    },
+    "ExtractedRow": {
+      "additionalProperties": false,
+      "description": "One biomarker occurrence, exactly as it appeared on the page.",
+      "properties": {
+        "row_id": {
+          "title": "Row Id",
+          "type": "string"
+        },
+        "page_no": {
+          "minimum": 1,
+          "title": "Page No",
+          "type": "integer"
+        },
+        "table_index": {
+          "minimum": 0,
+          "title": "Table Index",
+          "type": "integer"
+        },
+        "row_index": {
+          "minimum": 0,
+          "title": "Row Index",
+          "type": "integer"
+        },
+        "analyte_name_raw": {
+          "title": "Analyte Name Raw",
+          "type": "string"
+        },
+        "value_raw": {
+          "title": "Value Raw",
+          "type": "string"
+        },
+        "value_numeric": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value Numeric"
+        },
+        "comparator": {
+          "$ref": "#/$defs/Comparator",
+          "default": "none"
+        },
+        "is_numeric": {
+          "title": "Is Numeric",
+          "type": "boolean"
+        },
+        "unit_raw": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit Raw"
+        },
+        "reference_range_raw": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference Range Raw"
+        },
+        "ref_low": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref Low"
+        },
+        "ref_high": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref High"
+        },
+        "ref_operator": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Comparator"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "flag_raw": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FlagRaw"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "method_raw": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Method Raw"
+        },
+        "bbox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BBox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "confidence": {
+          "$ref": "#/$defs/FieldConfidence"
+        },
+        "needs_review": {
+          "default": false,
+          "title": "Needs Review",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "row_id",
+        "page_no",
+        "table_index",
+        "row_index",
+        "analyte_name_raw",
+        "value_raw",
+        "is_numeric",
+        "confidence"
+      ],
+      "title": "ExtractedRow",
+      "type": "object"
+    },
+    "ExtractionMeta": {
+      "additionalProperties": false,
+      "properties": {
+        "engine": {
+          "title": "Engine",
+          "type": "string"
+        },
+        "engine_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Engine Version"
+        },
+        "layout_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Layout Model"
+        },
+        "duration_ms": {
+          "minimum": 0,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "pages": {
+          "items": {
+            "$ref": "#/$defs/PageInfo"
+          },
+          "title": "Pages",
+          "type": "array"
+        }
+      },
+      "required": [
+        "engine",
+        "duration_ms"
+      ],
+      "title": "ExtractionMeta",
+      "type": "object"
+    },
+    "FieldConfidence": {
+      "additionalProperties": false,
+      "properties": {
+        "analyte": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Analyte",
+          "type": "number"
+        },
+        "value": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Value",
+          "type": "number"
+        },
+        "unit": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Unit",
+          "type": "number"
+        },
+        "range": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Range",
+          "type": "number"
+        }
+      },
+      "required": [
+        "analyte",
+        "value",
+        "unit",
+        "range"
+      ],
+      "title": "FieldConfidence",
+      "type": "object"
+    },
+    "FlagRaw": {
+      "enum": [
+        "H",
+        "L",
+        "N"
+      ],
+      "title": "FlagRaw",
+      "type": "string"
+    },
+    "LabInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "provider_name_raw": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provider Name Raw"
+        },
+        "provider_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Provider Id"
+        },
+        "accession_no": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Accession No"
+        },
+        "collected_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Collected At"
+        },
+        "reported_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reported At"
+        }
+      },
+      "title": "LabInfo",
+      "type": "object"
+    },
+    "PageInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "page_no": {
+          "minimum": 1,
+          "title": "Page No",
+          "type": "integer"
+        },
+        "width": {
+          "title": "Width",
+          "type": "number"
+        },
+        "height": {
+          "title": "Height",
+          "type": "number"
+        },
+        "rotation": {
+          "default": 0.0,
+          "title": "Rotation",
+          "type": "number"
+        },
+        "mean_word_confidence": {
+          "anyOf": [
+            {
+              "maximum": 100.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mean Word Confidence"
+        }
+      },
+      "required": [
+        "page_no",
+        "width",
+        "height"
+      ],
+      "title": "PageInfo",
+      "type": "object"
+    },
+    "PanelInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "panel_name_raw": {
+          "title": "Panel Name Raw",
+          "type": "string"
+        },
+        "page_no": {
+          "minimum": 1,
+          "title": "Page No",
+          "type": "integer"
+        },
+        "table_index": {
+          "minimum": 0,
+          "title": "Table Index",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "panel_name_raw",
+        "page_no",
+        "table_index"
+      ],
+      "title": "PanelInfo",
+      "type": "object"
+    },
+    "PatientContext": {
+      "additionalProperties": false,
+      "properties": {
+        "age_years": {
+          "anyOf": [
+            {
+              "maximum": 130,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Age Years"
+        },
+        "age_confidence": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Age Confidence"
+        },
+        "sex": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Sex"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "sex_confidence": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sex Confidence"
+        }
+      },
+      "title": "PatientContext",
+      "type": "object"
+    },
+    "Sex": {
+      "enum": [
+        "male",
+        "female",
+        "unknown"
+      ],
+      "title": "Sex",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "document_id": {
+      "title": "Document Id",
+      "type": "string"
+    },
+    "patient_id": {
+      "title": "Patient Id",
+      "type": "string"
+    },
+    "extraction": {
+      "$ref": "#/$defs/ExtractionMeta"
+    },
+    "patient_context": {
+      "$ref": "#/$defs/PatientContext"
+    },
+    "lab": {
+      "$ref": "#/$defs/LabInfo"
+    },
+    "panels": {
+      "items": {
+        "$ref": "#/$defs/PanelInfo"
+      },
+      "title": "Panels",
+      "type": "array"
+    },
+    "rows": {
+      "items": {
+        "$ref": "#/$defs/ExtractedRow"
+      },
+      "title": "Rows",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "document_id",
+    "patient_id",
+    "extraction"
+  ],
+  "title": "ExtractedReport",
+  "type": "object"
+}

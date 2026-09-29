@@ -3,12 +3,10 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-
+from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.document_loaders import PyPDFLoader
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -64,7 +62,6 @@ def load_and_split(docs_dir):
 
         with open(
             path,
-            "r",
             encoding="utf-8"
         ) as f:
 

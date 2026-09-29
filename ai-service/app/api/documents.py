@@ -1,11 +1,15 @@
-from fastapi import APIRouter, UploadFile, File, Form
-from pathlib import Path
 import shutil
+from pathlib import Path
 
-from app.retrieval.patient_ingest import (
-    ingest_patient_document
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+
+from app.core.validation import (
+    InvalidFilename,
+    InvalidPatientId,
+    safe_filename,
+    validate_patient_id,
 )
-
+from app.retrieval.patient_ingest import ingest_patient_document
 
 router = APIRouter(
     prefix="/api/documents",
@@ -29,6 +33,18 @@ async def process_document(
     patient_id: str = Form(...),
     document_id: str = Form(...)
 ):
+    # =========================
+    # 0. VALIDATE INPUT
+    # =========================
+    # patient_id and the uploaded filename both end up in a filesystem
+    # path (patient_documents/<patient_id>/<filename>). Validate both
+    # before any path is built -- see app/core/validation.py.
+    try:
+        patient_id = validate_patient_id(patient_id)
+        clean_filename = safe_filename(file.filename)
+    except (InvalidPatientId, InvalidFilename) as error:
+        raise HTTPException(status_code=422, detail=str(error))
+
     try:
 
         # =========================
@@ -50,7 +66,7 @@ async def process_document(
         # =========================
 
         file_path = (
-            patient_dir / file.filename
+            patient_dir / clean_filename
         )
 
         with open(
@@ -89,7 +105,7 @@ async def process_document(
 
             "document_id": document_id,
 
-            "filename": file.filename,
+            "filename": clean_filename,
 
             "path": str(file_path),
 
@@ -98,16 +114,24 @@ async def process_document(
             "index_path": ingestion_result["index_path"]
         }
 
+    except ValueError as error:
+        # Unsupported file type, empty document, etc. -- a client error,
+        # not a server error.
+        raise HTTPException(status_code=422, detail=str(error))
 
     except Exception as error:
-
+        # Previously this returned HTTP 200 with {"success": false},
+        # which meant the backend's `aiResponse.ok` check never fired
+        # and every caller had to remember to also check the body. A
+        # processing failure is a server-side failure; return 500 so
+        # HTTP-level error handling (retries, alerting, `!response.ok`
+        # checks) works the way callers expect.
         print(
             "Document processing error:",
             error
         )
 
-        return {
-            "success": False,
-            "message": "Unable to process document",
-            "error": str(error)
-        }
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unable to process document: {error}",
+        )

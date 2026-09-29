@@ -1,0 +1,109 @@
+# Local/dev orchestration for all careFlow services plus the Week 2
+# async ingestion dependencies (Redis + a Celery worker).
+#
+# Quick start:
+#   cp ai-service/.env.example ai-service/.env   # fill in GROQ_API_KEY at least
+#   cp backend/.env.example backend/.env
+#   docker compose up --build
+#
+# Profiles:
+#   default   mongo, redis, ai-service, worker, backend, frontend
+#   ml        adds nothing yet -- reserved for Neo4j once GraphRAG lands
+#             (see docs/ARCHITECTURE.md); kept as a documented seam so
+#             that phase doesn't require restructuring this file.
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ai-service:
+    build:
+      context: ./ai-service
+    restart: unless-stopped
+    env_file:
+      - ./ai-service/.env
+    environment:
+      PORT: "8080"
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      # Named volumes so a container restart doesn't lose uploaded
+      # documents or built indexes. NOT used for the data lake itself
+      # (bda_engine writes there separately, see bda_engine/README.md).
+      - ai_patient_documents:/app/patient_documents
+      - ai_patient_faiss:/app/patient_faiss
+
+  worker:
+    build:
+      context: ./ai-service
+    restart: unless-stopped
+    command: ["uv", "run", "--no-sync", "celery", "-A", "app.workers.celery_app", "worker", "--loglevel=INFO", "-Q", "default,ocr"]
+    env_file:
+      - ./ai-service/.env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ai_patient_documents:/app/patient_documents
+      - ai_patient_faiss:/app/patient_faiss
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      MONGO_URI: mongodb://mongo:27017/careflow
+      AI_SERVICE_URL: http://ai-service:8080
+    ports:
+      - "5000:5000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+    volumes:
+      - backend_uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
+  ai_patient_documents:
+  ai_patient_faiss:
+  backend_uploads:

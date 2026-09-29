@@ -1,10 +1,8 @@
 from fastapi import APIRouter
+from langchain_core.messages import HumanMessage
 from pydantic import BaseModel
 
-from langchain_core.messages import HumanMessage
-
 from app.agent.graph import agent
-
 
 router = APIRouter(
     prefix="/api/chat",
