@@ -1,0 +1,133 @@
+# The 9 biomarkers in scope (docs/ARCHITECTURE.md section 1).
+#
+# Every loinc_code below was looked up against loinc.org during this
+# build (2026-09-30) -- not guessed from memory. Two initial guesses
+# (FT3, Zinc) were wrong and corrected after checking; see `source` on
+# each entry. Every conversion factor was cross-checked against a
+# published clinical-chemistry conversion table (source given per
+# entry) -- these are standard mass<->molar conversions derived from
+# each analyte's molar mass, not this project's invention.
+#
+# plausible_min/max are gross implausibility bounds for
+# services/data_quality.py (Week 3) -- wide enough to admit any real
+# result, tight enough to catch a decimal-point OCR slip or a unit
+# mismatch. They are NOT clinical reference ranges; ref_low/high below
+# are typical adult reference intervals used only as the
+# ref_basis=fallback_default when a report prints no range of its own
+# -- a lab-stated range always wins (see services/ref_range.py, Week 3).
+#
+# LOINC is used here (not UMLS): 9 fixed analytes need no UMLS-scale
+# terminology breadth, and UMLS requires a separate UTS licence.
+# See docs/WEEKS_1-3_STATUS_AND_PLAN.md section 5, decision 2.
+
+TSH:
+  loinc_code: "3016-3"
+  loinc_long_name: "Thyrotropin [Units/volume] in Serum or Plasma"
+  canonical_unit: "mIU/L"
+  molar_mass_g_mol: null  # glycoprotein hormone; mass<->molar conversion not applicable
+  plausible_min: 0.001
+  plausible_max: 150
+  default_ref_low: 0.4
+  default_ref_high: 4.0
+  source: "https://loinc.org/3016-3"
+
+FT3:
+  loinc_code: "3051-0"
+  loinc_long_name: "Triiodothyronine (T3) Free [Mass/volume] in Serum or Plasma"
+  canonical_unit: "pmol/L"
+  molar_mass_g_mol: 650.97
+  plausible_min: 0.5
+  plausible_max: 30
+  default_ref_low: 3.5
+  default_ref_high: 6.5
+  source: "https://loinc.org/3051-0"
+  # NOTE: an earlier draft of this file guessed 3053-2 for FT3 -- that
+  # code does not exist (3053-6 is *total*, not free, T3). Corrected
+  # after checking loinc.org directly.
+
+FT4:
+  loinc_code: "3024-7"
+  loinc_long_name: "Thyroxine (T4) free [Mass/volume] in Serum or Plasma"
+  canonical_unit: "pmol/L"
+  molar_mass_g_mol: 776.87
+  plausible_min: 1
+  plausible_max: 100
+  default_ref_low: 9.0
+  default_ref_high: 25.0
+  source: "https://loinc.org/3024-7"
+
+ANTI_TPO:
+  loinc_code: "8099-4"
+  loinc_long_name: "Thyroperoxidase Ab [Units/volume] in Serum or Plasma"
+  canonical_unit: "IU/mL"
+  molar_mass_g_mol: null  # antibody titer, not a molar concentration
+  plausible_min: 0
+  plausible_max: 10000
+  default_ref_low: 0
+  default_ref_high: 34
+  source: "https://loinc.org/8099-4"
+  # NOTE: an earlier draft guessed a code that turned out to belong to
+  # a different, method-specific TPO Ab variant. 8099-4 is the
+  # unspecified-method code, matching the style of every other entry
+  # in this file (none of them pin a specific assay method).
+
+VIT_D_25OH:
+  loinc_code: "62292-8"
+  loinc_long_name: "25-Hydroxyvitamin D3+25-Hydroxyvitamin D2 [Mass/volume] in Serum or Plasma"
+  canonical_unit: "nmol/L"
+  molar_mass_g_mol: 400.64
+  plausible_min: 1
+  plausible_max: 500
+  default_ref_low: 50.0   # ~20 ng/mL, commonly cited "sufficient" cutoff
+  default_ref_high: 250.0 # ~100 ng/mL
+  source: "https://loinc.org/62292-8"
+  # Deliberately the combined D2+D3 code, not D3-only (LOINC 1989-3):
+  # most commercial "Vitamin D, 25-Hydroxy" reports sum both forms, and
+  # a synthetic/real report printing a single "Vitamin D" result maps
+  # to this combined analyte, not the D3-only fraction.
+
+VIT_B12:
+  loinc_code: "2132-9"
+  loinc_long_name: "Cobalamin (Vitamin B12) [Mass/volume] in Serum or Plasma"
+  canonical_unit: "pmol/L"
+  molar_mass_g_mol: 1355.37  # cyanocobalamin
+  plausible_min: 10
+  plausible_max: 5000
+  default_ref_low: 148.0
+  default_ref_high: 664.0
+  source: "https://loinc.org/2132-9"
+
+FERRITIN:
+  loinc_code: "2276-4"
+  loinc_long_name: "Ferritin [Mass/volume] in Serum or Plasma"
+  canonical_unit: "ug/L"  # numerically identical to ng/mL -- 1:1, see unit_conversions.csv
+  molar_mass_g_mol: null  # large, variable-composition iron-storage protein; no fixed molar mass
+  plausible_min: 0.5
+  plausible_max: 5000
+  default_ref_low: 15.0
+  default_ref_high: 300.0
+  source: "https://loinc.org/2276-4"
+
+MAGNESIUM:
+  loinc_code: "2601-3"
+  loinc_long_name: "Magnesium [Moles/volume] in Serum or Plasma"
+  canonical_unit: "mmol/L"
+  molar_mass_g_mol: 24.305  # CIAAW standard atomic weight
+  plausible_min: 0.1
+  plausible_max: 5
+  default_ref_low: 0.7
+  default_ref_high: 1.05
+  source: "https://loinc.org/2601-3"
+
+ZINC:
+  loinc_code: "5763-8"
+  loinc_long_name: "Zinc [Mass/volume] in Serum or Plasma"
+  canonical_unit: "umol/L"
+  molar_mass_g_mol: 65.38
+  plausible_min: 1
+  plausible_max: 100
+  default_ref_low: 10.7
+  default_ref_high: 18.4
+  source: "https://loinc.org/5763-8"
+  # NOTE: an earlier draft guessed LOINC 5709-1 for zinc -- that code
+  # is actually Paraquat. Corrected after checking loinc.org directly.

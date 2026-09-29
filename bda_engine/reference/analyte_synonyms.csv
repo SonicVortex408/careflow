@@ -1,0 +1,110 @@
+biomarker_key,variant,source
+TSH,tsh,common_abbreviation
+TSH,thyroid stimulating hormone,clinical_convention
+TSH,thyroid-stimulating hormone,clinical_convention
+TSH,thyrotropin,loinc_long_name
+TSH,thyrotropin (tsh),clinical_convention
+TSH,s-tsh,lab_report_variant
+TSH,tsh (3rd generation),lab_report_variant
+TSH,serum tsh,lab_report_variant
+TSH,"tsh, serum",lab_report_variant
+TSH,thyroid stimulating hormone (tsh),clinical_convention
+TSH,sensitive tsh,lab_report_variant
+TSH,s tsh,lab_report_variant
+TSH,tsh level,lab_report_variant
+TSH,tsh-3rd gen,lab_report_variant
+FT3,free t3,common_abbreviation
+FT3,ft3,common_abbreviation
+FT3,t3 free,word_order_variant
+FT3,free triiodothyronine,clinical_convention
+FT3,triiodothyronine free,word_order_variant
+FT3,free t-3,hyphenation_variant
+FT3,"t3, free",lab_report_variant
+FT3,ft-3,hyphenation_variant
+FT3,"triiodothyronine, free",lab_report_variant
+FT3,free tri-iodothyronine,hyphenation_variant
+FT3,t3(free),lab_report_variant
+FT3,serum free t3,lab_report_variant
+FT3,free t3 (ft3),clinical_convention
+FT4,free t4,common_abbreviation
+FT4,ft4,common_abbreviation
+FT4,t4 free,word_order_variant
+FT4,free thyroxine,clinical_convention
+FT4,thyroxine free,word_order_variant
+FT4,free t-4,hyphenation_variant
+FT4,"t4, free",lab_report_variant
+FT4,ft-4,hyphenation_variant
+FT4,"thyroxine, free",lab_report_variant
+FT4,t4(free),lab_report_variant
+FT4,serum free t4,lab_report_variant
+FT4,free thyroxine (ft4),clinical_convention
+FT4,"t4, free (direct)",lab_report_variant
+ANTI_TPO,anti-tpo,common_abbreviation
+ANTI_TPO,anti tpo,common_abbreviation
+ANTI_TPO,tpo antibody,clinical_convention
+ANTI_TPO,tpo ab,common_abbreviation
+ANTI_TPO,thyroid peroxidase antibody,loinc_long_name
+ANTI_TPO,thyroperoxidase antibody,loinc_long_name
+ANTI_TPO,anti-thyroid peroxidase,clinical_convention
+ANTI_TPO,anti thyroid peroxidase antibody,clinical_convention
+ANTI_TPO,tpo abs,lab_report_variant
+ANTI_TPO,thyroid peroxidase ab,lab_report_variant
+ANTI_TPO,anti-tpo antibody,lab_report_variant
+ANTI_TPO,tpo-ab,hyphenation_variant
+ANTI_TPO,anti-tpo abs,lab_report_variant
+VIT_D_25OH,vitamin d,common_abbreviation
+VIT_D_25OH,"vitamin d, 25-hydroxy",lab_report_variant
+VIT_D_25OH,25-hydroxy vitamin d,word_order_variant
+VIT_D_25OH,25(oh)d,common_abbreviation
+VIT_D_25OH,25-oh vitamin d,common_abbreviation
+VIT_D_25OH,25 hydroxyvitamin d,lab_report_variant
+VIT_D_25OH,25-hydroxyvitamin d,loinc_long_name
+VIT_D_25OH,vitamin d (25-oh),lab_report_variant
+VIT_D_25OH,25(oh) vit-d,hyphenation_variant
+VIT_D_25OH,calcidiol,clinical_synonym
+VIT_D_25OH,vit d 25-oh,common_abbreviation
+VIT_D_25OH,25-hydroxy vit d,lab_report_variant
+VIT_D_25OH,vitamin d total,lab_report_variant
+VIT_B12,vitamin b12,common_abbreviation
+VIT_B12,vit b12,common_abbreviation
+VIT_B12,b12,common_abbreviation
+VIT_B12,cobalamin,loinc_long_name
+VIT_B12,vitamin b-12,hyphenation_variant
+VIT_B12,vit. b12,lab_report_variant
+VIT_B12,serum b12,lab_report_variant
+VIT_B12,cyanocobalamin,clinical_synonym
+VIT_B12,vit b-12,hyphenation_variant
+VIT_B12,vitamin b 12,spacing_variant
+VIT_B12,b-12,hyphenation_variant
+VIT_B12,vitamin b12 (cobalamin),clinical_convention
+FERRITIN,ferritin,common_abbreviation
+FERRITIN,serum ferritin,lab_report_variant
+FERRITIN,s-ferritin,lab_report_variant
+FERRITIN,"ferritin, serum",lab_report_variant
+FERRITIN,ferritin level,lab_report_variant
+FERRITIN,serum ferritin level,lab_report_variant
+FERRITIN,plasma ferritin,lab_report_variant
+FERRITIN,ferritin (iron stores),clinical_convention
+FERRITIN,s. ferritin,lab_report_variant
+FERRITIN,"ferritin, quant",lab_report_variant
+FERRITIN,ferritin - serum,lab_report_variant
+MAGNESIUM,magnesium,common_abbreviation
+MAGNESIUM,serum magnesium,lab_report_variant
+MAGNESIUM,"magnesium, serum",lab_report_variant
+MAGNESIUM,magnesium level,lab_report_variant
+MAGNESIUM,magnesium (mg),clinical_convention
+MAGNESIUM,plasma magnesium,lab_report_variant
+MAGNESIUM,s. magnesium,lab_report_variant
+MAGNESIUM,magnesium - serum,lab_report_variant
+MAGNESIUM,serum mg,common_abbreviation
+MAGNESIUM,mg (magnesium),clinical_convention
+ZINC,zinc,common_abbreviation
+ZINC,serum zinc,lab_report_variant
+ZINC,zn,common_abbreviation
+ZINC,"zinc, serum",lab_report_variant
+ZINC,zinc level,lab_report_variant
+ZINC,zinc (zn),clinical_convention
+ZINC,plasma zinc,lab_report_variant
+ZINC,s. zinc,lab_report_variant
+ZINC,zinc - serum,lab_report_variant
+ZINC,serum zn,common_abbreviation
