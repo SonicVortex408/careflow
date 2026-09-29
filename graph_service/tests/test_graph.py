@@ -141,3 +141,8 @@ def test_live_neo4j_matches_in_memory():
     assert [c.to_dict() for c in live.evidence_chains(findings)] == [
         c.to_dict() for c in InMemoryGraph().evidence_chains(findings)
     ]
+
+
+def test_split_statements_keeps_semicolons_inside_literals():
+    text = 'MERGE (a {note: "x; y"});\n// comment\nMERGE (b);\n'
+    assert split_statements(text) == ['MERGE (a {note: "x; y"})', "MERGE (b)"]

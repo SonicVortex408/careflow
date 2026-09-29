@@ -55,6 +55,7 @@ def load(artifact_dir: Path | None = None) -> dict:
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
+    logging.getLogger("neo4j").setLevel(logging.WARNING)
     parser = argparse.ArgumentParser()
     parser.add_argument("--artifacts", type=Path, default=None)
     args = parser.parse_args()

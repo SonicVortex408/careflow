@@ -9,6 +9,7 @@ connector share one definition.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from polymarker_common.catalog import load_catalog
@@ -71,7 +72,7 @@ def generate_seed() -> str:
         )
         out.append(f"MERGE (l:LOINC {{code: {_lit(m.loinc)}}}) SET l.name = {_lit(m.loinc_name)};")
         out.append(
-            f"MATCH (b:Biomarker {{key: {_lit(key)}}}), (l:LOINC {{code: {_lit(m.loinc)}}}) "
+            f"MATCH (b:Biomarker {{key: {_lit(key)}}}) MATCH (l:LOINC {{code: {_lit(m.loinc)}}}) "
             f"MERGE (b)-[r:CODED_AS]->(l) SET r += {_props({'source': 'loinc', 'evidence_level': 'guideline', 'verified': True})};"
         )
         ranges = [("reference", None, m.reference)] + [
@@ -94,7 +95,7 @@ def generate_seed() -> str:
             }
             out.append(f"MERGE (r:FunctionalRange {{id: {_lit(rid)}}}) SET r += {_props(props)};")
             out.append(
-                f"MATCH (b:Biomarker {{key: {_lit(key)}}}), (r:FunctionalRange {{id: {_lit(rid)}}}) MERGE (b)-[:HAS_RANGE]->(r);"
+                f"MATCH (b:Biomarker {{key: {_lit(key)}}}) MATCH (r:FunctionalRange {{id: {_lit(rid)}}}) MERGE (b)-[:HAS_RANGE]->(r);"
             )
 
     out += ["", "// Conditions and symptoms"]
@@ -116,21 +117,21 @@ def generate_seed() -> str:
         }
         out.append(f"MERGE (r:FunctionalRange {{id: {_lit(t['id'])}}}) SET r += {_props(props)};")
         out.append(
-            f"MATCH (b:Biomarker {{key: {_lit(t['biomarker'])}}}), (r:FunctionalRange {{id: {_lit(t['id'])}}}) "
+            f"MATCH (b:Biomarker {{key: {_lit(t['biomarker'])}}}) MATCH (r:FunctionalRange {{id: {_lit(t['id'])}}}) "
             "MERGE (b)-[:HAS_RANGE]->(r);"
         )
 
     out += ["", "// Threshold -> condition evidence"]
     for e in seed.THRESHOLD_EDGES:
         out.append(
-            f"MATCH (r:FunctionalRange {{id: {_lit(e['from'])}}}), (c:Condition {{id: {_lit(e['to'])}}}) "
+            f"MATCH (r:FunctionalRange {{id: {_lit(e['from'])}}}) MATCH (c:Condition {{id: {_lit(e['to'])}}}) "
             f"MERGE (r)-[x:{e['type']}]->(c) SET x += {_props(_edge_props(e))};"
         )
 
     out += ["", "// Condition -> symptom evidence"]
     for e in seed.PRESENTS_WITH:
         out.append(
-            f"MATCH (c:Condition {{id: {_lit(e['from'])}}}), (s:Symptom {{id: {_lit(e['to'])}}}) "
+            f"MATCH (c:Condition {{id: {_lit(e['from'])}}}) MATCH (s:Symptom {{id: {_lit(e['to'])}}}) "
             f"MERGE (c)-[x:PRESENTS_WITH]->(s) SET x += {_props(_edge_props(e))};"
         )
 
@@ -138,7 +139,7 @@ def generate_seed() -> str:
     for e in seed.BIOMARKER_CORRELATIONS:
         props = _edge_props(e) | {"direction": e["direction"]}
         out.append(
-            f"MATCH (a:Biomarker {{key: {_lit(e['from'])}}}), (b:Biomarker {{key: {_lit(e['to'])}}}) "
+            f"MATCH (a:Biomarker {{key: {_lit(e['from'])}}}) MATCH (b:Biomarker {{key: {_lit(e['to'])}}}) "
             f"MERGE (a)-[x:CORRELATES_WITH]->(b) SET x += {_props(props)};"
         )
     return "\n".join(out) + "\n"
@@ -183,15 +184,16 @@ def correlation_statements(correlations: list[dict]):
         label = "Symptom" if c["to"] in seed.SYMPTOMS else "Biomarker"
         prop = "id" if label == "Symptom" else "key"
         yield (
-            f"MATCH (a:Biomarker {{key: $from}}), (b:{label} {{{prop}: $to}}) "
+            f"MATCH (a:Biomarker {{key: $from}}) MATCH (b:{label} {{{prop}: $to}}) "
             "MERGE (a)-[x:CORRELATES_WITH]->(b) SET x += $props",
             {"from": c["from"], "to": c["to"], "props": props},
         )
 
 
 def split_statements(text: str) -> list[str]:
+    """Statements end with ';' at end of line (semicolons inside string literals are kept)."""
     body = "\n".join(line for line in text.splitlines() if not line.strip().startswith("//"))
-    return [s.strip() for s in body.split(";") if s.strip()]
+    return [s.strip() for s in re.split(r";[ \t]*$", body, flags=re.MULTILINE) if s.strip()]
 
 
 if __name__ == "__main__":

@@ -163,6 +163,10 @@ def build_chains(
                 )
             )
 
+    for chain in chains.values():
+        # Backends return rows in arbitrary order; make output deterministic.
+        chain.symptoms.sort(key=lambda s: (not s.reported, EVIDENCE_RANK[s.edge.evidence_level], s.id))
+
     def rank(c: EvidenceChain):
         return (
             -len(c.matches_reported_symptoms),
