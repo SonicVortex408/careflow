@@ -1,0 +1,206 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "canonical_unit_system": "SI (conventional units are converted on ingest)",
+    "note": "Reference intervals vary by laboratory, assay and population. The intervals below are typical adult values used for demonstration only; they are not clinical guidance. Escalation thresholds are illustrative defaults that a deploying clinical team must review and configure."
+  },
+  "biomarkers": {
+    "TSH": {
+      "loinc": "3016-3",
+      "loinc_name": "Thyrotropin [Units/volume] in Serum or Plasma",
+      "display": "TSH",
+      "long_name": "Thyroid-stimulating hormone",
+      "panel": "thyroid",
+      "canonical_unit": "mIU/L",
+      "aliases": [
+        "tsh", "thyroid stimulating hormone", "thyroid-stimulating hormone", "thyrotropin",
+        "thyrotrophin", "tsh 3rd generation", "tsh third generation", "ultrasensitive tsh",
+        "us tsh", "s tsh", "serum tsh", "tsh ultrasensitive", "tsh serum"
+      ],
+      "units": {"miu/l": 1.0, "uiu/ml": 1.0, "mu/l": 1.0, "uu/ml": 1.0},
+      "reference": {"low": 0.4, "high": 4.0, "source": "Typical adult laboratory interval (American Thyroid Association patient resources)"},
+      "plausible": {"low": 0.001, "high": 200.0},
+      "escalation": [
+        {"op": "<", "value": 0.1, "level": "priority", "reason": "Suppressed TSH", "evidence_level": "expert_consensus"},
+        {"op": ">", "value": 10.0, "level": "priority", "reason": "Markedly raised TSH", "evidence_level": "expert_consensus"},
+        {"op": ">", "value": 50.0, "level": "urgent", "reason": "Very high TSH", "evidence_level": "unverified"}
+      ]
+    },
+    "FT4": {
+      "loinc": "3024-7",
+      "loinc_name": "Thyroxine (T4) free [Mass/volume] in Serum or Plasma",
+      "display": "Free T4",
+      "long_name": "Free thyroxine",
+      "panel": "thyroid",
+      "canonical_unit": "pmol/L",
+      "aliases": [
+        "free t4", "ft4", "f t4", "free thyroxine", "thyroxine free", "t4 free", "fti4",
+        "free thyroxine t4", "thyroxine t4 free", "t4 free direct", "free t4 direct"
+      ],
+      "units": {"pmol/l": 1.0, "ng/dl": 12.87, "ng/l": 1.287, "pg/ml": 1.287},
+      "reference": {"low": 10.0, "high": 23.0, "source": "Typical adult laboratory interval (0.8-1.8 ng/dL)"},
+      "plausible": {"low": 1.0, "high": 155.0},
+      "escalation": [
+        {"op": "<", "value": 5.0, "level": "urgent", "reason": "Very low free T4", "evidence_level": "unverified"},
+        {"op": ">", "value": 50.0, "level": "urgent", "reason": "Very high free T4", "evidence_level": "unverified"}
+      ]
+    },
+    "FT3": {
+      "loinc": "3051-0",
+      "loinc_name": "Triiodothyronine (T3) Free [Mass/volume] in Serum or Plasma",
+      "display": "Free T3",
+      "long_name": "Free triiodothyronine",
+      "panel": "thyroid",
+      "canonical_unit": "pmol/L",
+      "aliases": [
+        "free t3", "ft3", "f t3", "free triiodothyronine", "triiodothyronine free", "t3 free",
+        "free triiodothyronine t3", "triiodothyronine t3 free", "free t3 direct"
+      ],
+      "units": {"pmol/l": 1.0, "pg/ml": 1.536, "pg/dl": 0.01536, "ng/l": 1.536, "ng/dl": 15.36},
+      "reference": {"low": 3.1, "high": 6.8, "source": "Typical adult laboratory interval (2.0-4.4 pg/mL)"},
+      "plausible": {"low": 0.5, "high": 50.0},
+      "escalation": [
+        {"op": ">", "value": 20.0, "level": "urgent", "reason": "Very high free T3", "evidence_level": "unverified"}
+      ]
+    },
+    "TPOAB": {
+      "loinc": "8099-4",
+      "loinc_name": "Thyroperoxidase Ab [Units/volume] in Serum or Plasma",
+      "display": "Anti-TPO",
+      "long_name": "Thyroid peroxidase antibodies",
+      "panel": "thyroid",
+      "canonical_unit": "IU/mL",
+      "aliases": [
+        "anti tpo", "anti-tpo", "tpo ab", "tpoab", "tpo antibody", "tpo antibodies",
+        "thyroid peroxidase antibodies", "thyroid peroxidase antibody", "anti thyroid peroxidase",
+        "anti-thyroid peroxidase", "antithyroperoxidase", "thyroperoxidase ab", "anti tpo antibodies",
+        "thyroid peroxidase ab", "atpo"
+      ],
+      "units": {"iu/ml": 1.0, "kiu/l": 1.0, "u/ml": 1.0, "ku/l": 1.0},
+      "reference": {"low": 0.0, "high": 35.0, "source": "Common assay cut-off; many assays use lower cut-offs (e.g. <9 IU/mL)"},
+      "plausible": {"low": 0.0, "high": 10000.0},
+      "escalation": [
+        {"op": ">", "value": 500.0, "level": "priority", "reason": "Strongly positive thyroid antibodies", "evidence_level": "unverified"}
+      ]
+    },
+    "VITD": {
+      "loinc": "62292-8",
+      "loinc_name": "25-Hydroxyvitamin D2+25-Hydroxyvitamin D3 [Mass/volume] in Serum or Plasma",
+      "display": "Vitamin D (25-OH)",
+      "long_name": "25-hydroxyvitamin D",
+      "panel": "micronutrient",
+      "canonical_unit": "nmol/L",
+      "aliases": [
+        "vitamin d", "vit d", "25 oh vitamin d", "25-oh vitamin d", "25 hydroxyvitamin d",
+        "25-hydroxyvitamin d", "25 hydroxy vitamin d", "25 oh d", "25ohd", "25 oh vit d",
+        "vitamin d 25 hydroxy", "vitamin d 25 oh", "vitamin d total", "total vitamin d",
+        "calcidiol", "vitamin d3 25 oh", "25 hydroxy vitamin d total", "vit d 25 oh",
+        "vitamin d 25 hydroxy total"
+      ],
+      "units": {"nmol/l": 1.0, "ng/ml": 2.496, "ug/l": 2.496},
+      "reference": {"low": 50.0, "high": 125.0, "source": "NIH Office of Dietary Supplements: >=50 nmol/L adequate for most people; >125 nmol/L linked to potential adverse effects"},
+      "plausible": {"low": 2.5, "high": 625.0},
+      "escalation": [
+        {"op": "<", "value": 30.0, "level": "priority", "reason": "Vitamin D in the deficient range", "evidence_level": "guideline"},
+        {"op": ">", "value": 375.0, "level": "urgent", "reason": "Vitamin D in a potentially toxic range", "evidence_level": "guideline"}
+      ]
+    },
+    "B12": {
+      "loinc": "2132-9",
+      "loinc_name": "Cobalamin (Vitamin B12) [Mass/volume] in Serum or Plasma",
+      "display": "Vitamin B12",
+      "long_name": "Cobalamin (vitamin B12)",
+      "panel": "micronutrient",
+      "canonical_unit": "pmol/L",
+      "aliases": [
+        "vitamin b12", "vit b12", "b12", "cobalamin", "cyanocobalamin", "vitamin b 12",
+        "serum b12", "b12 serum", "vitamin b12 serum", "cobalamin vitamin b12", "vitb12"
+      ],
+      "units": {"pmol/l": 1.0, "pg/ml": 0.7378, "ng/l": 0.7378},
+      "reference": {"low": 148.0, "high": 664.0, "source": "Typical adult laboratory interval (200-900 pg/mL)"},
+      "plausible": {"low": 30.0, "high": 2000.0},
+      "escalation": [
+        {"op": "<", "value": 111.0, "level": "priority", "reason": "Vitamin B12 clearly low", "evidence_level": "expert_consensus"}
+      ]
+    },
+    "FERRITIN": {
+      "loinc": "2276-4",
+      "loinc_name": "Ferritin [Mass/volume] in Serum or Plasma",
+      "display": "Ferritin",
+      "long_name": "Serum ferritin",
+      "panel": "micronutrient",
+      "canonical_unit": "ug/L",
+      "aliases": [
+        "ferritin", "serum ferritin", "s ferritin", "ferritin serum", "plasma ferritin", "ferritin level"
+      ],
+      "units": {"ug/l": 1.0, "ng/ml": 1.0, "pmol/l": 0.445},
+      "reference": {"low": 15.0, "high": 300.0, "source": "Typical adult laboratory interval; sex-specific intervals below"},
+      "reference_by_sex": {
+        "F": {"low": 15.0, "high": 150.0},
+        "M": {"low": 30.0, "high": 400.0}
+      },
+      "plausible": {"low": 1.0, "high": 10000.0},
+      "escalation": [
+        {"op": "<", "value": 10.0, "level": "priority", "reason": "Very low iron stores", "evidence_level": "expert_consensus"},
+        {"op": ">", "value": 1000.0, "level": "urgent", "reason": "Very high ferritin", "evidence_level": "expert_consensus"}
+      ]
+    },
+    "MG": {
+      "loinc": "19123-9",
+      "loinc_name": "Magnesium [Mass/volume] in Serum or Plasma",
+      "display": "Magnesium",
+      "long_name": "Serum magnesium",
+      "panel": "micronutrient",
+      "canonical_unit": "mmol/L",
+      "aliases": [
+        "magnesium", "serum magnesium", "magnesium serum", "s magnesium", "plasma magnesium",
+        "mg serum", "serum mg", "magnesium level"
+      ],
+      "units": {"mmol/l": 1.0, "mg/dl": 0.4114, "meq/l": 0.5, "mg/l": 0.04114},
+      "reference": {"low": 0.7, "high": 1.0, "source": "Typical adult laboratory interval (1.7-2.4 mg/dL)"},
+      "plausible": {"low": 0.1, "high": 4.0},
+      "escalation": [
+        {"op": "<", "value": 0.5, "level": "urgent", "reason": "Very low magnesium", "evidence_level": "expert_consensus"},
+        {"op": ">", "value": 1.5, "level": "urgent", "reason": "High magnesium", "evidence_level": "expert_consensus"}
+      ]
+    },
+    "ZINC": {
+      "loinc": "5763-8",
+      "loinc_name": "Zinc [Mass/volume] in Serum or Plasma",
+      "display": "Zinc",
+      "long_name": "Serum zinc",
+      "panel": "micronutrient",
+      "canonical_unit": "umol/L",
+      "aliases": [
+        "zinc", "serum zinc", "zinc serum", "plasma zinc", "zn", "s zinc", "zinc level", "zinc plasma"
+      ],
+      "units": {"umol/l": 1.0, "ug/dl": 0.153, "mg/l": 15.3, "ug/l": 0.0153},
+      "reference": {"low": 9.2, "high": 18.4, "source": "Typical adult laboratory interval (60-120 ug/dL)"},
+      "plausible": {"low": 1.0, "high": 60.0},
+      "escalation": [
+        {"op": "<", "value": 7.6, "level": "priority", "reason": "Low zinc", "evidence_level": "unverified"}
+      ]
+    }
+  },
+  "proms": {
+    "fatigue_severity": {
+      "display": "Chronic fatigue",
+      "type": "integer",
+      "min": 1,
+      "max": 10,
+      "description": "Self-rated fatigue severity over the last 2 weeks (1 = none, 10 = worst imaginable)"
+    },
+    "brain_fog_frequency": {
+      "display": "Brain fog",
+      "type": "ordinal",
+      "levels": ["never", "rarely", "sometimes", "often", "always"],
+      "description": "How often trouble concentrating or remembering was noticed over the last 2 weeks"
+    },
+    "hair_loss": {
+      "display": "Hair loss",
+      "type": "ordinal",
+      "levels": ["none", "mild", "moderate", "severe"],
+      "description": "Self-rated hair shedding or thinning over the last 3 months"
+    }
+  }
+}
