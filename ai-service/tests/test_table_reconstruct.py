@@ -9,7 +9,7 @@ from bda_engine.generate.render_pdf import LAYOUTS
 
 from app.ocr.common import Word
 from app.ocr.table_reconstruct import (
-    _known_units,
+    default_known_units,
     detect_column_bands,
     group_words_into_lines,
     reconstruct_rows,
@@ -125,6 +125,6 @@ class TestDetectColumnBands:
 
 class TestKnownUnits:
     def test_known_units_is_nonempty_and_normalized(self):
-        units = _known_units()
+        units = default_known_units()
         assert len(units) > 5
         assert "mIU/L" in units or "miu/l" in {u.lower() for u in units}

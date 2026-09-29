@@ -124,7 +124,12 @@ def _band_for_word(word: Word, bands: list[tuple[float, float]]) -> int:
     return min(range(len(bands)), key=lambda i: abs(center - (bands[i][0] + bands[i][1]) / 2))
 
 
-def _known_units() -> set[str]:
+def default_known_units() -> set[str]:
+    """The canonicalized from_unit set across every biomarker in
+    reference/unit_conversions.csv -- used as reconstruct_rows()'s
+    default when the caller doesn't already have one (e.g. from a
+    normalizer call earlier in the same pipeline run)."""
+
     from app.services.reference_data import load_unit_conversions
 
     return {canonicalize_unit(row.from_unit) for row in load_unit_conversions()}
@@ -176,7 +181,7 @@ def parse_line_to_row(line: list[Word], known_units: set[str]) -> RowCandidate |
 def reconstruct_rows(pages, known_units: set[str] | None = None) -> list[RowCandidate]:
     """pages: an iterable of PageWords (app/ocr/common.py)."""
 
-    known_units = known_units if known_units is not None else _known_units()
+    known_units = known_units if known_units is not None else default_known_units()
 
     rows = []
     row_index = 0
