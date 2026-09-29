@@ -6,7 +6,7 @@ const startServer = async () => {
     await connectDB();
 
     app.listen(env.port, () => {
-        console.log(`Server running on port ${env.port}`);
+        console.log(`PolyMarker API listening on port ${env.port}`);
     });
 };
 

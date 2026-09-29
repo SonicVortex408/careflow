@@ -35,6 +35,11 @@ const documentSchema = new mongoose.Schema(
             required: true,
         },
 
+        jobId: {
+            type: String,
+            default: null,
+        },
+
         status: {
             type: String,
             enum: [
