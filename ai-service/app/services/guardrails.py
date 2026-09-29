@@ -55,7 +55,7 @@ _I = re.IGNORECASE
 BLOCKED_PATTERNS: dict[str, list[re.Pattern]] = {
     "diagnostic_claim": [
         re.compile(
-            r"\byou (?:definitely |clearly |certainly )?(?:have|are suffering from|suffer from|are diagnosed with|have been diagnosed with)\b(?! (?:a |an |any )?(?:question|questions|appointment|right|choice|option|symptom|result|test)s?\b)",
+            r"(?<!\bif )(?<!\bwhen )(?<!\bunless )(?<!\bwhether )(?<!\bdo )(?<!\bif )\byou (?:definitely |clearly |certainly )?(?:have|are suffering from|suffer from|are diagnosed with|have been diagnosed with)\b(?! (?:a |an |any )?(?:question|questions|appointment|right|rights|choice|option|symptom|result|test|the right|a right)s?\b)",
             _I,
         ),
         re.compile(r"\byou are (?:hypo|hyper)thyroid\b", _I),

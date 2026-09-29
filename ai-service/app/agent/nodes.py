@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from typing import Any
 
 from langchain_core.messages import AIMessage, RemoveMessage, SystemMessage, ToolMessage
@@ -95,6 +96,7 @@ def retrieve(state: AgentState) -> dict:
     retrieval["kb"] = [
         {
             "title": c.metadata.get("title"),
+            "source": c.metadata.get("source"),
             "evidence_level": c.metadata.get("evidence_level"),
             "text": c.text,
         }
@@ -153,15 +155,22 @@ def _fallback_answer(state: AgentState) -> str:
     r = state.get("retrieval") or {}
     parts = []
     passages = r.get("kb") or []
-    if passages:
-        first = passages[0]
+    # Quote the best reviewed page, plus the runner-up when the question names its
+    # topic too (e.g. "How are TSH and free T4 read together?").
+    query = _last_human(state).lower()
+
+    def named_in_query(passage) -> bool:
+        words = re.findall(r"[a-z0-9]{3,}", (passage.get("title") or "").lower())
+        return any(w in query for w in words)
+
+    chosen = passages[:1] + [p for p in passages[1:2] if named_in_query(p)]
+    for passage in chosen:
         body = " ".join(
-            line for line in first["text"].splitlines() if line and not line.startswith("#")
+            line for line in passage["text"].splitlines() if line and not line.startswith("#")
         )
         sentences = guardrails.split_sentences(body)[:3]
         parts.append(
-            f"Here is what our reference page on {first['title'].lower()} says. "
-            + " ".join(sentences)
+            f"Our reference page on {passage['title'].lower()} says: " + " ".join(sentences)
         )
     chains = ((r.get("evidence") or {}).get("chains") or [])[:2]
     for c in chains:

@@ -76,3 +76,15 @@ def test_escalation_levels():
     assert g.evaluate_escalation(user_text="I can't breathe properly").level == "emergency"
     assert g.evaluate_escalation(proms={"fatigue_severity": 10}).level == "priority"
     assert g.evaluate_escalation(quality_issues=[{"severity": "error", "marker": "MG"}]).required
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "If you have chest pain, call your local emergency number now.",
+        "You have the right to ask for a copy of your report.",
+        "Do you have any questions for your clinician?",
+    ],
+)
+def test_conditional_and_rights_sentences_are_not_diagnostic_claims(text):
+    assert g.find_violations(text) == []

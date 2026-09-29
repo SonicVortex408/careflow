@@ -67,3 +67,30 @@ Mechanism: move to `src/legacy/` and gate behind `VITE_ENABLE_LEGACY_QUEUE`
 | Retrieval returns `status: internal` documents as the top hit | Phase 1/3 — enforce metadata filtering in the retriever, not only in the prompt |
 | `init_chat_model` at import time crashes the app without a key | Phase 1 — lazy/`@lru_cache` provider factory, `LLM_PROVIDER` env-configurable |
 | In-memory LangGraph checkpointer | Phase 3 — Redis/Mongo checkpointer once Redis exists |
+
+## Status after implementation
+
+Approved as "APPROVE and ADAPT" (queue-management shell repurposed rather than quarantined).
+
+| Item | Outcome |
+|---|---|
+| E-commerce KB, orders data, order tools, `src/ai_service` scaffold | Removed; medical knowledge base in `ai-service/knowledge_base/` |
+| `visible-cases.json` | Adapted: schema kept in `evaluation/cases/assistant_cases.json` (10 lab-interpretation / safety cases, all passing) |
+| `search_docs` | Adapted into `search_knowledge_base` with metadata filtering in code |
+| System prompt | Rewritten for PolyMarker; safety, privacy and injection rules kept; policy-authority rules replaced by evidence levels |
+| `handoff_check` | Replaced by deterministic escalation rules in `guardrails.py` |
+| `app/core/config.py` | pydantic-settings `Settings` |
+| Queue pages, dashboard/doctor/patient components, `mockData.js`, `queueLogic.js`, mock services | Removed; replaced by patient / clinician / admin pages |
+| `ChartCard`, shared components, tokens | Kept and reused |
+| Sidebar / Header | Role-driven |
+| `PatientPortal.jsx` | Superseded by the role-driven shell and patient pages |
+| `AIAssistant.jsx` | Split into `components/assistant/*` |
+| Hardcoded Render URL ×3 | Removed; `services/apiClient.js` + `VITE_API_BASE_URL` (CI guard) |
+| `index.html` title, `cors` dependency | Rebranded; removed |
+| Admin model / public admin register / `console.log(token)` | Admin kept for platform admins; public route removed (seed + admin-created clinicians); log removed |
+| `errorMiddleware.js` | Implemented and mounted |
+| Synchronous document proxy | Async jobs (`202` + polling) for reports and documents |
+| `.env.example`, docker-compose, test runners, CI | Added |
+| Retrieval returning internal docs | Fixed in code; evaluated (0 leaks) |
+| Import-time LLM construction | Lazy factory |
+| In-memory checkpointer | Redis Stack checkpointer (memory fallback) |

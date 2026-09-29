@@ -111,11 +111,15 @@ def test_online_single_row_transform_matches_training_features(small_settings, t
     from polymarker_common.features import transform_row
 
     _, manifest = trained
-    spec = json.loads((small_settings.artifact_dir / manifest["artifacts"]["feature_spec"]["path"]).read_text())
+    spec = json.loads(
+        (small_settings.artifact_dir / manifest["artifacts"]["feature_spec"]["path"]).read_text()
+    )
     gold = pd.read_parquet(small_settings.lake_dir / "gold" / "patient_features").head(200)
     X, _ = build_features(gold, FeatureSpec.from_dict(spec))
     for i in range(len(gold)):
         row = gold.iloc[i]
         markers = {k: (None if pd.isna(row[k]) else float(row[k])) for k in BIOMARKER_KEYS}
         online = transform_row(markers, row["sex"], float(row["age"]), spec)
-        np.testing.assert_allclose([online[c] for c in spec["columns"]], X.iloc[i].to_numpy(), rtol=1e-9, atol=1e-12)
+        np.testing.assert_allclose(
+            [online[c] for c in spec["columns"]], X.iloc[i].to_numpy(), rtol=1e-9, atol=1e-12
+        )
