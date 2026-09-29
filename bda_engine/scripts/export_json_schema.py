@@ -18,7 +18,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from bda_engine.schemas import ALL_SCHEMAS
 
-OUT_DIR = Path(__file__).resolve().parents[1] / "reference" / "json_schema"
+# reference/ lives at the repo root, not inside bda_engine/ -- see the
+# comment on REFERENCE_DIR in bda_engine/src/bda_engine/reference_data.py.
+OUT_DIR = Path(__file__).resolve().parents[2] / "reference" / "json_schema"
 
 
 def main():

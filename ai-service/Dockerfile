@@ -22,9 +22,15 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
-COPY pyproject.toml ./
-COPY app ./app
-COPY sample_docs ./sample_docs
+# This image is built with the *repo root* as build context (see
+# docker-compose.yml: `context: .`, `dockerfile: ai-service/Dockerfile`),
+# not ai-service/ itself -- app/services/reference_data.py (Week 3)
+# reads reference/ at a fixed relative path that must exist alongside
+# ai-service/, and Docker cannot COPY from outside its build context.
+COPY ai-service/pyproject.toml ./
+COPY ai-service/app ./app
+COPY ai-service/sample_docs ./sample_docs
+COPY reference /reference
 
 RUN uv venv /opt/venv
 

@@ -1,16 +1,14 @@
 """
-Loaders for the reference/ data files: biomarkers.yaml,
-analyte_synonyms.csv, unit_conversions.csv, lab_providers.csv.
+Loaders for the repo-root reference/ data files.
 
-This is the single place that knows the on-disk shape of reference/, so
-both the synthetic generator (bda_engine) and the normalizer
-(ai-service, which reads these same files -- see
-ai-service/app/services/normalizer.py) can share it without duplicating
-parsing logic. ai-service does not depend on bda_engine as a package
-(kept as a separate uv project per ARCHITECTURE.md decision 4), so its
-normalizer re-implements a thin loader against the same files; this
-module is bda_engine's own copy, used by the generator and by this
-package's tests.
+This is a deliberate, small duplication of
+bda_engine/src/bda_engine/reference_data.py, not an import of it:
+ai-service must not depend on the bda_engine package, because
+bda_engine's dependencies (pandas, faker, reportlab, duckdb, the
+pyspark extra) are heavy and irrelevant to a request-serving API --
+see docs/ARCHITECTURE.md decision 4. Both loaders read the exact same
+files at repo-root reference/, so the two copies cannot drift in what
+data they see, only (harmlessly) in loader code shape.
 """
 
 import csv
@@ -20,15 +18,11 @@ from pathlib import Path
 
 import yaml
 
-# reference/ lives at the repo root (sibling to ai-service/, backend/,
-# bda_engine/), not inside bda_engine/, so it can be shared as plain
-# data: both this generator package and ai-service's Week 3 normalizer
-# (app/services/reference_data.py, a separate tiny loader, not an
-# import of this module) read the same LOINC codes, conversion
-# factors, and synonym tables without ai-service taking a Python
-# dependency on bda_engine's heavier deps (pandas, faker, reportlab,
-# duckdb, the pyspark extra) -- see ARCHITECTURE.md decision 4.
-# bda_engine/src/bda_engine/reference_data.py -> repo root is 3 levels up.
+# ai-service/app/services/reference_data.py -> repo root is 3 levels up
+# locally (services -> app -> ai-service -> repo root), and also 3
+# levels up inside the Docker image (services -> app -> /app -> /),
+# where reference/ is COPYed to /reference -- see ai-service/Dockerfile
+# and docker-compose.yml's `context: .` for ai-service/worker.
 REFERENCE_DIR = Path(__file__).resolve().parents[3] / "reference"
 
 

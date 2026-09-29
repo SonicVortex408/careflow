@@ -39,7 +39,13 @@ services:
 
   ai-service:
     build:
-      context: ./ai-service
+      # Context is the repo root, not ai-service/, because the Week 3
+      # normalizer reads reference/ (LOINC codes, unit conversions,
+      # synonyms) which lives at the repo root, shared with bda_engine
+      # -- see the comment on REFERENCE_DIR in
+      # bda_engine/src/bda_engine/reference_data.py.
+      context: .
+      dockerfile: ai-service/Dockerfile
     restart: unless-stopped
     env_file:
       - ./ai-service/.env
@@ -60,7 +66,8 @@ services:
 
   worker:
     build:
-      context: ./ai-service
+      context: .
+      dockerfile: ai-service/Dockerfile
     restart: unless-stopped
     command: ["uv", "run", "--no-sync", "celery", "-A", "app.workers.celery_app", "worker", "--loglevel=INFO", "-Q", "default,ocr"]
     env_file:

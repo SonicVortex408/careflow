@@ -1,0 +1,26 @@
+# Used when the build context is the repo root (ai-service and worker in
+# docker-compose.yml -- they need reference/ alongside ai-service/, so
+# their context can't be scoped to ai-service/ alone). backend/ and
+# frontend/ build with their own directory as context and use their own
+# .dockerignore instead.
+
+.git
+.gitignore
+**/.venv-build
+**/.venv
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/node_modules
+**/.env
+**/.env.*
+
+ai-service/faiss_index
+ai-service/patient_documents
+ai-service/patient_faiss
+
+backend/uploads
+
+bda_engine/data_lake
+docs

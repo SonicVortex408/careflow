@@ -73,6 +73,10 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
+# UP042: kept as (str, Enum) instead of StrEnum -- see the same note in
+# bda_engine/pyproject.toml (StrEnum is 3.11+ only; this repo's only
+# working local interpreter during development was 3.10).
+ignore = ["UP042"]
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
