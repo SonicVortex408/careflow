@@ -19,6 +19,7 @@ from typing import Any
 from app.core.config import get_settings
 from app.core.llm import get_chat_model
 from app.services import guardrails
+from polymarker_common.catalog import load_catalog
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +74,9 @@ def template_summary(context: dict[str, Any]) -> str:
     """Deterministic fallback. Short words, short sentences (tested <= grade 8)."""
     bands = context.get("bands") or {}
     reported = context.get("reported_values") or {}
+    sections: list[list[str]] = []
     lines = ["Here is a plain summary of your lab report."]
+    sections.append(lines)
     ordered = sorted(bands.values(), key=lambda b: (b["reference_status"] == "within", b["key"]))
     in_range = []
     for b in ordered:
@@ -101,6 +104,8 @@ def template_summary(context: dict[str, Any]) -> str:
     if plain_in_range:
         lines.append(f"These results are in the usual range: {_list(plain_in_range)}.")
 
+    lines = []
+    sections.append(lines)
     cluster = context.get("cluster")
     if cluster:
         lines.append(
@@ -116,24 +121,31 @@ def template_summary(context: dict[str, Any]) -> str:
             text += f" The results that mattered most were {_list(drivers)}."
         lines.append(text)
 
+    lines = []
+    sections.append(lines)
     for chain in (context.get("evidence") or {}).get("chains", [])[:3]:
         symptoms = [s["name"].lower() for s in chain["symptoms"]][:2]
         cond = chain["condition"].split(" (")[0].lower()
-        text = f"{chain['finding']} can be linked with {cond}."
+        level = "low" if "below" in chain["finding"].lower() else "high"
+        text = (
+            f"A {level} {load_catalog()[chain['marker']].display} level can be linked with {cond}."
+        )
         if symptoms:
             text += f" This can come with {_list(symptoms)}."
         if chain["verified"]:
-            text += f" Source: {chain['edge']['source_title'].split(' - ')[0]}."
+            text += f" Source: {chain['edge'].get('source_publisher') or chain['edge']['source_title']}."
         else:
             text += " This link is not yet confirmed."
         lines.append(text)
 
+    lines = []
+    sections.append(lines)
     if (context.get("quality") or {}).get("needs_clinician_attention"):
         lines.append(
             "Some values were hard to read. Your clinician will check them against your report."
         )
     lines.append("Use the question list below to talk with your clinician.")
-    return " ".join(lines)
+    return "\n\n".join(" ".join(section) for section in sections if section)
 
 
 def _llm_context(context: dict[str, Any]) -> str:

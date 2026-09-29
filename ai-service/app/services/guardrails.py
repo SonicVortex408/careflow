@@ -272,12 +272,17 @@ def check(draft: str) -> tuple[bool, list[Violation], float]:
 
 
 def _redact(text: str, audit: list[dict]) -> str:
-    kept, removed = [], []
-    for sentence in split_sentences(text):
-        if _sentence_violations(sentence):
-            removed.append(sentence[:120])
-            continue
-        kept.append(sentence)
+    """Drop any sentence that breaks a rule, keeping paragraph structure."""
+    paragraphs, removed = [], []
+    for para in re.split(r"\n\s*\n", text):
+        kept = []
+        for sentence in split_sentences(para):
+            if _sentence_violations(sentence):
+                removed.append(sentence[:120])
+                continue
+            kept.append(sentence)
+        if kept:
+            paragraphs.append(" ".join(kept))
     if removed:
         audit.append(
             {
@@ -290,7 +295,7 @@ def _redact(text: str, audit: list[dict]) -> str:
         )
     else:
         audit.append({"check": "blocked_language_redaction", "passed": True, "action": "none"})
-    out = " ".join(kept)
+    out = "\n\n".join(paragraphs)
     n_priv = 0
     for p in PRIVACY_PATTERNS:
         out, n = p.subn("[removed]", out)

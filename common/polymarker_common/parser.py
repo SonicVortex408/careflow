@@ -25,7 +25,7 @@ _VALUE_TOKEN = re.compile(
     r"(?<![A-Za-z0-9.,\-/])"  # not glued to a word / previous number / unit
     r"(?P<qual>[<>]=?|≤|≥)?\s*"
     r"(?P<num>\d+(?:[.,]\d+)?)"
-    r"(?![0-9]|[.,]\d|-[A-Za-z]|\s*-\s*OH\b|\s*\(OH\))"
+    r"(?![0-9]|[.,]\d|[A-Za-z]|-[A-Za-z]|\s*-\s*OH\b|\s+OH\b|\s*\(OH\))"
 )
 _RANGE = re.compile(
     r"(?P<low>\d+(?:[.,]\d+)?)\s*(?:-|–|—|to)\s*(?P<high>\d+(?:[.,]\d+)?)"
@@ -113,14 +113,18 @@ def _extract_unit(remainder: str, marker_key: str) -> tuple[str | None, str]:
     """Return (unit, rest_after_unit). Tolerates 'ng / mL' spacing."""
     known = _known_units(marker_key)
     tokens = remainder.strip().split()
+    # Some layouts print the H/L flag between the value and the unit ("5.40 H mIU/L").
+    skipped: list[str] = []
+    while tokens and _FLAG.fullmatch(f" {tokens[0]}") and clean_unit(tokens[0]) not in known:
+        skipped.append(tokens.pop(0))
     for width in (3, 2, 1):
         if len(tokens) >= width:
             candidate = "".join(tokens[:width])
             if clean_unit(candidate) in known:
-                return candidate, " ".join(tokens[width:])
+                return candidate, " ".join(skipped + tokens[width:])
     if tokens and re.search(r"[A-Za-zµμ]", tokens[0]) and "/" in tokens[0]:
         # A unit-looking token we do not know: keep it so the normalizer flags it.
-        return tokens[0], " ".join(tokens[1:])
+        return tokens[0], " ".join(skipped + tokens[1:])
     return None, remainder
 
 
@@ -141,7 +145,10 @@ def parse_line(line: str, line_no: int = 0, ocr_confidence: float = 1.0) -> RawR
         name = match_name(label)
         if name is None:
             continue
-        score = (name.confidence, len(label))
+        # Highest label confidence wins; on ties the EARLIEST value wins, so a
+        # longer "label" that has swallowed the real value (e.g. "Free T3 4.46
+        # pmol/L 3.10") can never beat the true split.
+        score = (name.confidence, -match.start())
         if best is None or score > best[0]:
             best = (score, match, label, name)
     if best is None:

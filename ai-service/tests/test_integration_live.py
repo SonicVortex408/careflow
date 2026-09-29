@@ -11,7 +11,9 @@ import pytest
 
 from .conftest import PATIENT, REPORT, SAMPLE_REPORT
 
-pytestmark = pytest.mark.skipif(os.getenv("AI_INTEGRATION") != "1", reason="live integration disabled")
+pytestmark = pytest.mark.skipif(
+    os.getenv("AI_INTEGRATION") != "1", reason="live integration disabled"
+)
 
 
 @pytest.fixture
@@ -29,8 +31,11 @@ def live_client(monkeypatch):
 
 
 def test_celery_job_roundtrip(live_client):
-    r = live_client.post("/api/ocr", data={"patient_id": PATIENT, "report_id": REPORT},
-                         files={"file": ("report.txt", SAMPLE_REPORT.encode(), "text/plain")})
+    r = live_client.post(
+        "/api/ocr",
+        data={"patient_id": PATIENT, "report_id": REPORT},
+        files={"file": ("report.txt", SAMPLE_REPORT.encode(), "text/plain")},
+    )
     assert r.status_code == 202
     job_id = r.json()["job_id"]
     deadline = time.time() + 120
@@ -64,7 +69,9 @@ def test_redis_checkpointer_persists_across_agent_instances(monkeypatch):
     assert isinstance(get_checkpointer(), RedisSaver)
 
     cfg = {"configurable": {"thread_id": f"{PATIENT}:live-{time.time()}"}}
-    build_graph(get_checkpointer()).invoke({"messages": [HumanMessage(content="What is TSH?")], "patient_id": PATIENT}, config=cfg)
+    build_graph(get_checkpointer()).invoke(
+        {"messages": [HumanMessage(content="What is TSH?")], "patient_id": PATIENT}, config=cfg
+    )
     # A brand-new graph + saver (e.g. another replica) sees the same conversation.
     state = build_graph(get_checkpointer()).get_state(cfg)
     assert any(m.type == "human" and "TSH" in m.content for m in state.values["messages"])

@@ -41,6 +41,7 @@ class EvidenceEdge:
     evidence_level: str
     verified: bool
     note: str = ""
+    source_publisher: str = ""
 
 
 @dataclass
@@ -120,6 +121,7 @@ def _edge(edge_type: str, props: dict) -> EvidenceEdge:
         evidence_level=level,
         verified=is_verified(level),
         note=props.get("note", "") or "",
+        source_publisher=seed.SOURCES.get(source, {}).get("publisher", ""),
     )
 
 

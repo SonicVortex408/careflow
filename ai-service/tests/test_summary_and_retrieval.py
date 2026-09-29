@@ -165,3 +165,22 @@ def test_agent_memory_is_per_thread():
         {"messages": [HumanMessage(content="And ferritin?")], "patient_id": PATIENT}, config=cfg
     )
     assert sum(1 for m in second["messages"] if m.type == "human") == 2
+
+
+def test_template_summary_covers_results_cohort_and_evidence_in_paragraphs():
+    out = interpret(
+        ingest_lines(SAMPLE_REPORT.splitlines()),
+        proms={"fatigue_severity": 8, "brain_fog_frequency": "often", "hair_loss": "mild"},
+    )
+    text = out["summary"]["text"]
+    for fragment in (
+        "Here is a plain summary",
+        "Ferritin is",
+        "TSH is",
+        "Your results look most like a group",
+        "chance of strong tiredness",
+        "can be linked with",
+        "question list",
+    ):
+        assert fragment in text, fragment
+    assert text.count("\n\n") >= 4  # results / cohort / evidence / closing / disclaimer

@@ -21,7 +21,9 @@ def age_band(age: float, bands: list[float]) -> int:
     return len(bands) - 2
 
 
-def impute_row(markers: dict[str, float | None], sex: str, age: float, spec: dict) -> tuple[dict[str, float], dict[str, bool]]:
+def impute_row(
+    markers: dict[str, float | None], sex: str, age: float, spec: dict
+) -> tuple[dict[str, float], dict[str, bool]]:
     key = f"{sex}|{age_band(age, spec['age_bands'])}"
     medians = spec["impute"].get(key, spec["global_median"])
     values, missing = {}, {}
@@ -33,7 +35,9 @@ def impute_row(markers: dict[str, float | None], sex: str, age: float, spec: dic
     return values, missing
 
 
-def transform_row(markers: dict[str, float | None], sex: str | None, age: float | None, spec: dict) -> dict[str, float]:
+def transform_row(
+    markers: dict[str, float | None], sex: str | None, age: float | None, spec: dict
+) -> dict[str, float]:
     """``spec`` is the exported feature_spec artifact."""
     sex = (sex or "F").upper()[:1]
     age = float(age if age is not None else 45)
@@ -48,7 +52,9 @@ def transform_row(markers: dict[str, float | None], sex: str | None, age: float 
     f["ft3_ft4_ratio"] = values["FT3"] / max(values["FT4"], eps)
     f["log_ferritin_to_tsh"] = f["log_FERRITIN"] - f["log_TSH"]
     f["log_tsh_x_ft4"] = f["log_TSH"] + f["log_FT4"]
-    f["low_iron_x_high_tsh"] = float(values["FERRITIN"] < 30) * max(f["log_TSH"] - math.log(2.5), 0.0)
+    f["low_iron_x_high_tsh"] = float(values["FERRITIN"] < 30) * max(
+        f["log_TSH"] - math.log(2.5), 0.0
+    )
     f["log_tpo_x_log_tsh"] = f["log_TPOAB"] * f["log_TSH"]
     f["log_b12_x_log_vitd"] = f["log_B12"] * f["log_VITD"]
     f["micronutrient_deficit_count"] = float(

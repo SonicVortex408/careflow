@@ -1,84 +1,15 @@
-const API_BASE_URL = "https://careflow-gwxc.onrender.com/api";
+import { api } from "./apiClient.js";
 
-/* =========================
-   AUTH HEADER
-========================= */
+/** Returns { response, escalation } - the reply has already passed the server-side guardrails. */
+export async function sendAIMessage(message, conversationId) {
+    const data = await api("/ai/chat", { method: "POST", body: { message, conversationId } });
+    return { response: data.response, escalation: data.escalation };
+}
 
-const getAuthHeaders = () => {
-    const token = localStorage.getItem("token");
+export async function uploadDocument(file) {
+    const form = new FormData();
+    form.append("document", file);
+    return api("/ai/documents", { method: "POST", form });
+}
 
-    return {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-    };
-};
-
-
-/* =========================
-   SEND AI MESSAGE
-========================= */
-
-export const sendAIMessage = async (
-    message,
-    conversationId
-) => {
-    const response = await fetch(
-        `${API_BASE_URL}/ai/chat`,
-        {
-            method: "POST",
-            headers: getAuthHeaders(),
-            body: JSON.stringify({
-                message,
-                conversationId,
-            }),
-        }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(
-            data.message || "AI request failed"
-        );
-    }
-
-    return data.response;
-};
-
-
-/* =========================
-   UPLOAD MEDICAL DOCUMENT
-========================= */
-
-export const uploadDocument = async (file) => {
-    const token = localStorage.getItem("token");
-
-    const formData = new FormData();
-
-    formData.append(
-        "document",
-        file
-    );
-
-    const response = await fetch(
-        `${API_BASE_URL}/ai/documents`,
-        {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-            body: formData,
-        }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(
-            data.message ||
-            "Document upload failed"
-        );
-    }
-
-    return data;
-};
+export const getDocumentStatus = async (id) => (await api(`/ai/documents/${id}/status`)).document;
