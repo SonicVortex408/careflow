@@ -8,6 +8,13 @@ This is the target design adapted to what actually exists today (see
 [`CURRENT_STATE.md`](./CURRENT_STATE.md)). It extends careFlow; it does not
 rewrite it.
 
+> **Status:** the Weeks 1-3 portion of this design (`bda_engine/`,
+> the OCR pipeline, the normalizer) has since been implemented — see
+> [`WEEKS_1-3_STATUS_AND_PLAN.md`](./WEEKS_1-3_STATUS_AND_PLAN.md) for
+> what's built vs. still a gap. `graph_service/`/Neo4j GraphRAG,
+> `evaluation/`, and the clinician review workflow below remain
+> target design, not yet implemented.
+
 > **Synthetic-data rule.** All population-level data in this system is
 > synthetic. Every cluster, "functional range", percentile and risk score
 > derived from it is labelled *"derived from synthetic data, for

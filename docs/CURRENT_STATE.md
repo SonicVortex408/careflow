@@ -1,5 +1,13 @@
 # careFlow — Current State Audit (Step 0)
 
+> **This is a point-in-time snapshot from 2026-09-28, before the Weeks
+> 1-3 data-lake/OCR/normalization work.** Several gaps this document
+> identifies (no test suite, import-time crashes, the synchronous
+> upload path, hardcoded ai-service port) have since been fixed — see
+> [`WEEKS_1-3_STATUS_AND_PLAN.md`](./WEEKS_1-3_STATUS_AND_PLAN.md) for
+> current status. Kept as-is below as the historical record of the
+> original codebase.
+
 Audit performed on the `careFlow-master.zip` snapshot supplied on 2026-09-28.
 No code was changed. Everything below was verified by reading the source and by
 running the services locally unless explicitly marked as an inference.
