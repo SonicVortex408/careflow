@@ -1,0 +1,154 @@
+{
+  "$defs": {
+    "PromDerived": {
+      "additionalProperties": false,
+      "properties": {
+        "fatigue_score": {
+          "title": "Fatigue Score",
+          "type": "number"
+        },
+        "brain_fog_score": {
+          "title": "Brain Fog Score",
+          "type": "number"
+        },
+        "hair_loss_score": {
+          "title": "Hair Loss Score",
+          "type": "number"
+        },
+        "composite_burden": {
+          "title": "Composite Burden",
+          "type": "number"
+        }
+      },
+      "required": [
+        "fatigue_score",
+        "brain_fog_score",
+        "hair_loss_score",
+        "composite_burden"
+      ],
+      "title": "PromDerived",
+      "type": "object"
+    },
+    "PromItem": {
+      "additionalProperties": false,
+      "properties": {
+        "item_code": {
+          "$ref": "#/$defs/PromItemCode"
+        },
+        "value_raw": {
+          "title": "Value Raw",
+          "type": "string"
+        },
+        "value_numeric": {
+          "title": "Value Numeric",
+          "type": "number"
+        },
+        "scale_min": {
+          "title": "Scale Min",
+          "type": "integer"
+        },
+        "scale_max": {
+          "title": "Scale Max",
+          "type": "integer"
+        },
+        "scale_type": {
+          "$ref": "#/$defs/PromScaleType"
+        }
+      },
+      "required": [
+        "item_code",
+        "value_raw",
+        "value_numeric",
+        "scale_min",
+        "scale_max",
+        "scale_type"
+      ],
+      "title": "PromItem",
+      "type": "object"
+    },
+    "PromItemCode": {
+      "enum": [
+        "FATIGUE_SEVERITY",
+        "BRAIN_FOG_FREQUENCY",
+        "HAIR_LOSS"
+      ],
+      "title": "PromItemCode",
+      "type": "string"
+    },
+    "PromScaleType": {
+      "enum": [
+        "nrs",
+        "ordinal"
+      ],
+      "title": "PromScaleType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "response_id": {
+      "title": "Response Id",
+      "type": "string"
+    },
+    "patient_id": {
+      "title": "Patient Id",
+      "type": "string"
+    },
+    "instrument": {
+      "default": "CAREFLOW_PROM_V1",
+      "title": "Instrument",
+      "type": "string"
+    },
+    "instrument_version": {
+      "default": "1.0.0",
+      "title": "Instrument Version",
+      "type": "string"
+    },
+    "submitted_at": {
+      "format": "date-time",
+      "title": "Submitted At",
+      "type": "string"
+    },
+    "survey_date": {
+      "format": "date",
+      "title": "Survey Date",
+      "type": "string"
+    },
+    "recall_window_days": {
+      "default": 7,
+      "minimum": 1,
+      "title": "Recall Window Days",
+      "type": "integer"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/PromItem"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "derived": {
+      "$ref": "#/$defs/PromDerived"
+    },
+    "is_synthetic": {
+      "default": false,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "response_id",
+    "patient_id",
+    "submitted_at",
+    "survey_date",
+    "items",
+    "derived"
+  ],
+  "title": "PromResponse",
+  "type": "object"
+}

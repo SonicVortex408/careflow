@@ -1,0 +1,62 @@
+[project]
+name = "bda_engine"
+version = "0.1.0"
+description = "careFlow big-data engine: synthetic lab-report generation, schemas, and the bronze/silver/gold ETL for the biomarker data lake."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.6.0",
+    "pyyaml>=6.0.2",
+    "faker>=30.0.0",
+    "numpy>=2.0.0",
+    "pandas>=2.2.0",
+    "pyarrow>=17.0.0",
+    "duckdb>=1.1.0",
+    "scipy>=1.14.0",
+    "reportlab>=4.2.0",
+    "pillow>=10.4.0",
+    "typer>=0.13.0",
+    "pymupdf>=1.24.0",  # scan_simulate.py: rasterize rendered PDFs to
+                         # simulate scanned/photographed input
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "ruff>=0.7.0",
+    "pdfplumber>=0.11.0",  # verifies render_pdf.py output is actually
+                            # text-extractable; not needed at runtime
+]
+
+[project.optional-dependencies]
+# PySpark path for etl/engine.py (ETL_ENGINE=spark). Off by default --
+# DuckDB handles 50k-patient scale locally without a JVM. See
+# docs/ARCHITECTURE.md decision 5.
+spark = [
+    "pyspark>=3.5.0",
+]
+
+[project.scripts]
+generate-synthetic-data = "bda_engine.generate.generate_synthetic_data:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+# UP042: `class X(str, Enum)` -> `class X(StrEnum)`. Deliberately kept as
+# the (str, Enum) mixin instead: StrEnum is 3.11+ only, and this repo's
+# only working local interpreter during development was 3.10 (the
+# system's 3.11 install was broken) -- see docs/WEEKS_1-3_STATUS_AND_PLAN.md
+# "Verification environment" note. Both forms behave the same for every
+# call site actually used here (f-string formatting, model_dump(mode="json")).
+ignore = ["UP042"]
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"

@@ -34,3 +34,6 @@ backend/uploads/
 backend/test-report.txt
 # Research PDFs used for local RAG testing
 ai-service/sample_docs/knowledge-base/*.pdf
+
+# Local build/test venv (not the per-service uv envs)
+.venv-build/

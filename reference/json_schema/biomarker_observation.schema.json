@@ -1,0 +1,395 @@
+{
+  "$defs": {
+    "BiomarkerKey": {
+      "description": "The 9 analytes in scope (docs/ARCHITECTURE.md section 1).",
+      "enum": [
+        "TSH",
+        "FT3",
+        "FT4",
+        "ANTI_TPO",
+        "VIT_D_25OH",
+        "VIT_B12",
+        "FERRITIN",
+        "MAGNESIUM",
+        "ZINC"
+      ],
+      "title": "BiomarkerKey",
+      "type": "string"
+    },
+    "MappingMethod": {
+      "enum": [
+        "exact",
+        "synonym",
+        "fuzzy",
+        "manual",
+        "unmapped"
+      ],
+      "title": "MappingMethod",
+      "type": "string"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "ocr_confidence": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ocr Confidence"
+        },
+        "needs_review": {
+          "default": false,
+          "title": "Needs Review",
+          "type": "boolean"
+        },
+        "reviewed_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewed By"
+        },
+        "reviewed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewed At"
+        }
+      },
+      "title": "Provenance",
+      "type": "object"
+    },
+    "Quality": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/QualityStatus",
+          "default": "ok"
+        },
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/QualityCheck"
+          },
+          "title": "Checks",
+          "type": "array"
+        }
+      },
+      "title": "Quality",
+      "type": "object"
+    },
+    "QualityCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Detail"
+        }
+      },
+      "required": [
+        "name",
+        "passed"
+      ],
+      "title": "QualityCheck",
+      "type": "object"
+    },
+    "QualityStatus": {
+      "enum": [
+        "ok",
+        "suspect",
+        "rejected"
+      ],
+      "title": "QualityStatus",
+      "type": "string"
+    },
+    "RefBasis": {
+      "enum": [
+        "lab_stated",
+        "fallback_default"
+      ],
+      "title": "RefBasis",
+      "type": "string"
+    },
+    "Sex": {
+      "enum": [
+        "male",
+        "female",
+        "unknown"
+      ],
+      "title": "Sex",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "observation_id": {
+      "title": "Observation Id",
+      "type": "string"
+    },
+    "document_id": {
+      "title": "Document Id",
+      "type": "string"
+    },
+    "row_id": {
+      "title": "Row Id",
+      "type": "string"
+    },
+    "patient_id": {
+      "title": "Patient Id",
+      "type": "string"
+    },
+    "biomarker_key": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BiomarkerKey"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "loinc_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Loinc Code"
+    },
+    "loinc_long_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Loinc Long Name"
+    },
+    "mapping_confidence": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Mapping Confidence",
+      "type": "number"
+    },
+    "mapping_method": {
+      "$ref": "#/$defs/MappingMethod"
+    },
+    "value_canonical": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Value Canonical"
+    },
+    "unit_canonical": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Unit Canonical"
+    },
+    "value_source": {
+      "title": "Value Source",
+      "type": "number"
+    },
+    "unit_source": {
+      "title": "Unit Source",
+      "type": "string"
+    },
+    "conversion_factor": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Conversion Factor"
+    },
+    "conversion_source": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Conversion Source"
+    },
+    "ref_low_canonical": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ref Low Canonical"
+    },
+    "ref_high_canonical": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ref High Canonical"
+    },
+    "ref_basis": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RefBasis"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "lab_provider_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Lab Provider Id"
+    },
+    "patient_age_years": {
+      "anyOf": [
+        {
+          "maximum": 130,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Patient Age Years"
+    },
+    "patient_sex": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Sex"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "collected_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Collected At"
+    },
+    "observed_month": {
+      "format": "date",
+      "title": "Observed Month",
+      "type": "string"
+    },
+    "quality": {
+      "$ref": "#/$defs/Quality"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "is_synthetic": {
+      "default": false,
+      "title": "Is Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "observation_id",
+    "document_id",
+    "row_id",
+    "patient_id",
+    "mapping_confidence",
+    "mapping_method",
+    "value_source",
+    "unit_source",
+    "observed_month"
+  ],
+  "title": "BiomarkerObservation",
+  "type": "object"
+}

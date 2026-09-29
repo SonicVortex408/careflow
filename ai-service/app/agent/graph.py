@@ -1,21 +1,10 @@
 from typing import Literal
 
-from langgraph.graph import (
-    StateGraph,
-    START,
-    END
-)
-
 from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.graph import END, START, StateGraph
 
+from app.agent.nodes import handoff_check, handoff_node, llm_call, tool_node
 from app.agent.state import MessagesState
-
-from app.agent.nodes import (
-    llm_call,
-    tool_node,
-    handoff_check,
-    handoff_node
-)
 
 
 def should_continue(

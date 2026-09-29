@@ -1,21 +1,15 @@
 import os
+from functools import lru_cache
 from pathlib import Path
 
-from langchain.chat_models import init_chat_model
 from dotenv import load_dotenv
-
-from langchain_core.messages import (
-    SystemMessage,
-    ToolMessage
-)
+from langchain.chat_models import init_chat_model
+from langchain_core.messages import SystemMessage, ToolMessage
 
 from app.agent.state import MessagesState
-from app.agent.tools import tools_by_name, tools
-
-from app.retrieval.patient_retriever import (
-    get_patient_retriever
-)
-
+from app.agent.tools import tools, tools_by_name
+from app.core.config import get_settings
+from app.retrieval.patient_retriever import get_patient_retriever
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -24,15 +18,42 @@ load_dotenv(
 )
 
 
-model = init_chat_model(
-    "groq:openai/gpt-oss-20b",
-    api_key=os.getenv("GROQ_API_KEY")
-)
+@lru_cache
+def get_model_with_tools():
+    """
+    Build (and cache) the chat model on first use, not at import time.
 
+    Previously this ran at module import, which meant a missing
+    GROQ_API_KEY crashed the whole FastAPI app -- including GET / --
+    before any request was ever served. Building it lazily lets the
+    service start and answer health checks; only requests that actually
+    reach the LLM fail, with a clear error, if the key is absent.
 
-model_with_tools = model.bind_tools(
-    tools
-)
+    LLM_PROVIDER / LLM_MODEL make the provider configurable instead of
+    hardcoding Groq, per ARCHITECTURE.md decision 10.
+    """
+
+    settings = get_settings()
+
+    api_key = None
+    if settings.llm_provider == "groq":
+        api_key = settings.groq_api_key or os.getenv("GROQ_API_KEY")
+    elif settings.llm_provider in ("google_genai", "google"):
+        api_key = settings.google_api_key or os.getenv("GOOGLE_API_KEY")
+
+    if not api_key:
+        raise RuntimeError(
+            "No API key configured for LLM_PROVIDER="
+            f"{settings.llm_provider!r}. Set GROQ_API_KEY (or "
+            "GOOGLE_API_KEY for google_genai) in the environment or .env."
+        )
+
+    model = init_chat_model(
+        settings.llm_model,
+        api_key=api_key,
+    )
+
+    return model.bind_tools(tools)
 
 
 SYSTEM_PROMPT = """
@@ -272,7 +293,7 @@ def llm_call(state: MessagesState) -> dict:
         )
     )
 
-    response = model_with_tools.invoke(
+    response = get_model_with_tools().invoke(
         [
             system_message
         ]
