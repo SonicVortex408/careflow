@@ -1,5 +1,9 @@
 # careFlow — Current State Audit (Step 0)
 
+> **Historical document.** This is the pre-implementation audit of the careFlow
+> snapshot. The issues listed in §5 were addressed in Phases 1–4; see the root
+> `README.md`, `docs/ARCHITECTURE.md` §9 and `docs/DOMAIN_MISMATCH.md` (status column).
+
 Audit performed on the `careFlow-master.zip` snapshot supplied on 2026-09-28.
 No code was changed. Everything below was verified by reading the source and by
 running the services locally unless explicitly marked as an inference.

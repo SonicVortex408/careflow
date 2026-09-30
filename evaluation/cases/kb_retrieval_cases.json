@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "cases": [
+    {"query": "what is TSH", "expected": "01-tsh.md"},
+    {"query": "free thyroxine range pmol", "expected": "02-free-t4.md"},
+    {"query": "free T3 conversion from T4", "expected": "03-free-t3.md"},
+    {"query": "thyroid peroxidase antibodies Hashimoto", "expected": "04-anti-tpo.md"},
+    {"query": "25-hydroxyvitamin D deficiency level", "expected": "05-vitamin-d.md"},
+    {"query": "low cobalamin numbness tingling", "expected": "06-vitamin-b12.md"},
+    {"query": "ferritin iron stores WHO cut-off", "expected": "07-ferritin.md"},
+    {"query": "magnesium muscle cramps heart rhythm", "expected": "08-magnesium.md"},
+    {"query": "zinc hair loss wound healing", "expected": "09-zinc.md"},
+    {"query": "brain fog trouble focusing", "expected": "10-symptoms.md"},
+    {"query": "what is a functional range synthetic test group", "expected": "11-functional-ranges.md"},
+    {"query": "when should I call emergency services", "expected": "12-when-to-seek-care.md"},
+    {"query": "what does the H flag on my lab report mean", "expected": "00-how-to-read-your-lab-report.md"}
+  ]
+}

@@ -1,0 +1,214 @@
+{
+ "label": "Derived from synthetic data, for research/demo purposes, not clinical guidance.",
+ "method": "spearman",
+ "marker_symptom": {
+  "TSH": {
+   "fatigue": 0.1506,
+   "brain_fog": 0.12,
+   "hair_loss": 0.0936
+  },
+  "FT3": {
+   "fatigue": -0.1471,
+   "brain_fog": -0.1093,
+   "hair_loss": -0.1186
+  },
+  "FT4": {
+   "fatigue": -0.0874,
+   "brain_fog": -0.0911,
+   "hair_loss": -0.0526
+  },
+  "TPOAB": {
+   "fatigue": 0.0426,
+   "brain_fog": 0.0302,
+   "hair_loss": 0.0402
+  },
+  "VITD": {
+   "fatigue": -0.108,
+   "brain_fog": -0.0778,
+   "hair_loss": -0.0026
+  },
+  "B12": {
+   "fatigue": -0.095,
+   "brain_fog": -0.1579,
+   "hair_loss": -0.0065
+  },
+  "FERRITIN": {
+   "fatigue": -0.3221,
+   "brain_fog": -0.1148,
+   "hair_loss": -0.3067
+  },
+  "MG": {
+   "fatigue": -0.062,
+   "brain_fog": -0.0153,
+   "hair_loss": -0.0054
+  },
+  "ZINC": {
+   "fatigue": -0.0175,
+   "brain_fog": -0.0225,
+   "hair_loss": -0.0902
+  }
+ },
+ "edges": [
+  {
+   "from": "TSH",
+   "to": "fatigue",
+   "rho": 0.1506,
+   "direction": "positive"
+  },
+  {
+   "from": "TSH",
+   "to": "brain_fog",
+   "rho": 0.12,
+   "direction": "positive"
+  },
+  {
+   "from": "FT3",
+   "to": "fatigue",
+   "rho": -0.1471,
+   "direction": "inverse"
+  },
+  {
+   "from": "FT3",
+   "to": "brain_fog",
+   "rho": -0.1093,
+   "direction": "inverse"
+  },
+  {
+   "from": "FT3",
+   "to": "hair_loss",
+   "rho": -0.1186,
+   "direction": "inverse"
+  },
+  {
+   "from": "VITD",
+   "to": "fatigue",
+   "rho": -0.108,
+   "direction": "inverse"
+  },
+  {
+   "from": "B12",
+   "to": "brain_fog",
+   "rho": -0.1579,
+   "direction": "inverse"
+  },
+  {
+   "from": "FERRITIN",
+   "to": "fatigue",
+   "rho": -0.3221,
+   "direction": "inverse"
+  },
+  {
+   "from": "FERRITIN",
+   "to": "brain_fog",
+   "rho": -0.1148,
+   "direction": "inverse"
+  },
+  {
+   "from": "FERRITIN",
+   "to": "hair_loss",
+   "rho": -0.3067,
+   "direction": "inverse"
+  }
+ ],
+ "marker_marker": {
+  "TSH": {
+   "TSH": 1.0,
+   "FT3": -0.2798,
+   "FT4": -0.3198,
+   "TPOAB": 0.1032,
+   "VITD": -0.0081,
+   "B12": -0.0063,
+   "FERRITIN": -0.0141,
+   "MG": -0.0012,
+   "ZINC": -0.005
+  },
+  "FT3": {
+   "TSH": -0.2798,
+   "FT3": 1.0,
+   "FT4": 0.5978,
+   "TPOAB": -0.0546,
+   "VITD": 0.004,
+   "B12": 0.0093,
+   "FERRITIN": 0.1093,
+   "MG": 0.0076,
+   "ZINC": 0.0649
+  },
+  "FT4": {
+   "TSH": -0.3198,
+   "FT3": 0.5978,
+   "FT4": 1.0,
+   "TPOAB": -0.0613,
+   "VITD": -0.0038,
+   "B12": -0.0039,
+   "FERRITIN": 0.0089,
+   "MG": 0.0072,
+   "ZINC": 0.0072
+  },
+  "TPOAB": {
+   "TSH": 0.1032,
+   "FT3": -0.0546,
+   "FT4": -0.0613,
+   "TPOAB": 1.0,
+   "VITD": -0.0012,
+   "B12": -0.0064,
+   "FERRITIN": -0.0076,
+   "MG": -0.0065,
+   "ZINC": 0.0021
+  },
+  "VITD": {
+   "TSH": -0.0081,
+   "FT3": 0.004,
+   "FT4": -0.0038,
+   "TPOAB": -0.0012,
+   "VITD": 1.0,
+   "B12": 0.0073,
+   "FERRITIN": -0.0009,
+   "MG": 0.0004,
+   "ZINC": 0.0062
+  },
+  "B12": {
+   "TSH": -0.0063,
+   "FT3": 0.0093,
+   "FT4": -0.0039,
+   "TPOAB": -0.0064,
+   "VITD": 0.0073,
+   "B12": 1.0,
+   "FERRITIN": 0.0078,
+   "MG": 0.0036,
+   "ZINC": 0.0175
+  },
+  "FERRITIN": {
+   "TSH": -0.0141,
+   "FT3": 0.1093,
+   "FT4": 0.0089,
+   "TPOAB": -0.0076,
+   "VITD": -0.0009,
+   "B12": 0.0078,
+   "FERRITIN": 1.0,
+   "MG": -0.0014,
+   "ZINC": 0.0129
+  },
+  "MG": {
+   "TSH": -0.0012,
+   "FT3": 0.0076,
+   "FT4": 0.0072,
+   "TPOAB": -0.0065,
+   "VITD": 0.0004,
+   "B12": 0.0036,
+   "FERRITIN": -0.0014,
+   "MG": 1.0,
+   "ZINC": 0.0147
+  },
+  "ZINC": {
+   "TSH": -0.005,
+   "FT3": 0.0649,
+   "FT4": 0.0072,
+   "TPOAB": 0.0021,
+   "VITD": 0.0062,
+   "B12": 0.0175,
+   "FERRITIN": 0.0129,
+   "MG": 0.0147,
+   "ZINC": 1.0
+  }
+ }
+}

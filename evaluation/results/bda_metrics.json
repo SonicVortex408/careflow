@@ -1,0 +1,496 @@
+{
+  "label": "Derived from synthetic data, for research/demo purposes, not clinical guidance.",
+  "model_version": {
+    "semver": "1.0.0",
+    "seed": 42,
+    "created_at": "2026-09-29T20:07:32+00:00"
+  },
+  "etl": {
+    "generated": {
+      "rows": 500908,
+      "typos": 4862,
+      "missing_units": 4977,
+      "decimal_misreads": 1430,
+      "duplicates": 2371
+    },
+    "reports": 67266,
+    "patients": 50000,
+    "duckdb": {
+      "engine": "duckdb",
+      "bronze_rows": 500908,
+      "silver_biomarker_rows": 498339,
+      "silver_prom_rows": 50000,
+      "gold_patients": 50000,
+      "label_map": {
+        "distinct_labels": 498,
+        "mapped": 478,
+        "fuzzy": 336
+      },
+      "audit_totals": {
+        "rows_mapped": 500712,
+        "fuzzy_labels": 3413,
+        "unparseable_values": 2,
+        "unit_inferred": 4997,
+        "implausible": 671,
+        "decimal_misread_suspect": 1451,
+        "zscore_outliers": 3187,
+        "iqr_outliers": 7532,
+        "duplicates_removed": 2371,
+        "unmapped_rows": 196
+      },
+      "timings": {
+        "bronze_s": 1.93,
+        "silver_biomarkers_s": 5.17,
+        "gold_s": 0.85,
+        "total_s": 7.94
+      }
+    },
+    "spark": {
+      "engine": "spark",
+      "bronze_rows": 500908,
+      "silver_biomarker_rows": 498339,
+      "silver_prom_rows": 50000,
+      "gold_patients": 50000,
+      "label_map": {
+        "distinct_labels": 498,
+        "mapped": 478,
+        "fuzzy": 336
+      },
+      "audit_totals": {
+        "rows_mapped": 500712,
+        "fuzzy_labels": 3413,
+        "unparseable_values": 2,
+        "unit_inferred": 4997,
+        "implausible": 671,
+        "decimal_misread_suspect": 1451,
+        "zscore_outliers": 3187,
+        "iqr_outliers": 7532,
+        "duplicates_removed": 2371,
+        "unmapped_rows": 196
+      },
+      "timings": {
+        "bronze_s": 15.01,
+        "silver_biomarkers_s": 42.96,
+        "gold_s": 9.77,
+        "total_s": 67.75
+      }
+    },
+    "reconciliation": {
+      "duplicates_injected": 2371,
+      "duplicates_removed": 2371,
+      "missing_units_injected": 4977,
+      "units_inferred": 4997,
+      "decimal_misreads_injected": 1430,
+      "decimal_misread_suspects": 1451,
+      "label_typos_injected": 4862,
+      "rows_left_unmapped": 196,
+      "typo_recovery_rate": 0.9597
+    }
+  },
+  "functional_bands": {
+    "per_marker": {
+      "TSH": {
+        "edge": "upper",
+        "generator_threshold": 2.5,
+        "discovered": 2.387,
+        "discovered_ci90": [
+          1.9027,
+          2.4966
+        ],
+        "lab_reference_edge": 4.0,
+        "relative_error": 0.0452,
+        "truth_within_ci": false,
+        "narrower_than_reference": true
+      },
+      "FT4": {
+        "edge": "lower",
+        "generator_threshold": 12.0,
+        "discovered": 13.4552,
+        "discovered_ci90": [
+          12.6987,
+          13.7581
+        ],
+        "lab_reference_edge": 10.0,
+        "relative_error": 0.1213,
+        "truth_within_ci": false,
+        "narrower_than_reference": true
+      },
+      "FERRITIN": {
+        "edge": "lower",
+        "generator_threshold": 45.0,
+        "discovered": 55.4248,
+        "discovered_ci90": [
+          51.4233,
+          287.1407
+        ],
+        "lab_reference_edge": 15.0,
+        "relative_error": 0.2317,
+        "truth_within_ci": false,
+        "narrower_than_reference": true
+      },
+      "VITD": {
+        "edge": "lower",
+        "generator_threshold": 60.0,
+        "discovered": 44.2232,
+        "discovered_ci90": [
+          42.661,
+          56.7341
+        ],
+        "lab_reference_edge": 50.0,
+        "relative_error": 0.2629,
+        "truth_within_ci": false,
+        "narrower_than_reference": false
+      },
+      "B12": {
+        "edge": "lower",
+        "generator_threshold": 260.0,
+        "discovered": 225.9769,
+        "discovered_ci90": [
+          207.8007,
+          246.3619
+        ],
+        "lab_reference_edge": 148.0,
+        "relative_error": 0.1309,
+        "truth_within_ci": false,
+        "narrower_than_reference": true
+      },
+      "MG": {
+        "edge": "lower",
+        "generator_threshold": 0.78,
+        "discovered": 0.7229,
+        "discovered_ci90": [
+          0.7039,
+          0.9359
+        ],
+        "lab_reference_edge": 0.7,
+        "relative_error": 0.0732,
+        "truth_within_ci": true,
+        "narrower_than_reference": true
+      }
+    },
+    "median_relative_error": 0.1261,
+    "truth_within_ci_rate": 0.1667,
+    "narrower_than_reference_rate": 0.8333
+  },
+  "clustering": {
+    "kmeans": {
+      "k": 9,
+      "silhouette": 0.1345112492265322,
+      "davies_bouldin": 1.5642153966256975,
+      "calinski_harabasz": 3997.3862069516135,
+      "ari_vs_latent_phenotype": 0.25829615054593486,
+      "nmi_vs_latent_phenotype": 0.30304944037069276
+    },
+    "gmm": {
+      "components": 8,
+      "silhouette": -0.017763713800110038,
+      "davies_bouldin": 11.889183480404617,
+      "ari_vs_latent_phenotype": 0.11664731327301053,
+      "nmi_vs_latent_phenotype": 0.20812617308657863
+    },
+    "dbscan": {
+      "eps": 2.3256385997884976,
+      "min_samples": 25,
+      "n_clusters": 1,
+      "noise_fraction": 0.037,
+      "noise_fatigue_rate": 0.5608108108108109,
+      "core_fatigue_rate": 0.17406542056074767,
+      "noise_phenotype_mix": {
+        "thyroid_overt": 0.672,
+        "thyroid_subclinical_autoimmune": 0.172,
+        "multi_micronutrient": 0.074,
+        "replete": 0.051,
+        "mineral_low": 0.017,
+        "vitamin_deficient": 0.014
+      },
+      "core_phenotype_mix": {
+        "replete": 0.538,
+        "thyroid_subclinical_autoimmune": 0.151,
+        "vitamin_deficient": 0.125,
+        "multi_micronutrient": 0.069,
+        "mineral_low": 0.057,
+        "iron_deficient": 0.049,
+        "thyroid_overt": 0.01
+      }
+    },
+    "kmeans_selection": [
+      {
+        "k": 3,
+        "silhouette": 0.108651482841477,
+        "davies_bouldin": 2.3599217944985216,
+        "calinski_harabasz": 1264.1403655948952,
+        "inertia": 89151.18263173584
+      },
+      {
+        "k": 4,
+        "silhouette": 0.10419212691454388,
+        "davies_bouldin": 2.1835930265943144,
+        "calinski_harabasz": 1161.1525796352626,
+        "inertia": 83648.45480666032
+      },
+      {
+        "k": 5,
+        "silhouette": 0.11772602742761377,
+        "davies_bouldin": 1.970793604234188,
+        "calinski_harabasz": 1211.2925631593675,
+        "inertia": 76883.06940309251
+      },
+      {
+        "k": 6,
+        "silhouette": 0.12122409445389484,
+        "davies_bouldin": 1.8039476178336795,
+        "calinski_harabasz": 1207.1910152519993,
+        "inertia": 71803.62536114398
+      },
+      {
+        "k": 7,
+        "silhouette": 0.128073387251852,
+        "davies_bouldin": 1.7260258099799517,
+        "calinski_harabasz": 1209.3731922144761,
+        "inertia": 67249.98561323837
+      },
+      {
+        "k": 8,
+        "silhouette": 0.1311887900775787,
+        "davies_bouldin": 1.6165902272983637,
+        "calinski_harabasz": 1207.6884190597357,
+        "inertia": 63308.93399927681
+      },
+      {
+        "k": 9,
+        "silhouette": 0.13727861785974343,
+        "davies_bouldin": 1.5456469354459346,
+        "calinski_harabasz": 1206.133450281667,
+        "inertia": 59809.96792252618
+      }
+    ],
+    "kmeans_vs_phenotype": {
+      "0": {
+        "iron_deficient": 0.009,
+        "mineral_low": 0.28,
+        "multi_micronutrient": 0.167,
+        "replete": 0.403,
+        "thyroid_overt": 0.001,
+        "thyroid_subclinical_autoimmune": 0.109,
+        "vitamin_deficient": 0.031
+      },
+      "1": {
+        "iron_deficient": 0.002,
+        "mineral_low": 0.011,
+        "multi_micronutrient": 0.082,
+        "replete": 0.315,
+        "thyroid_overt": 0.001,
+        "thyroid_subclinical_autoimmune": 0.092,
+        "vitamin_deficient": 0.498
+      },
+      "2": {
+        "iron_deficient": 0.0,
+        "mineral_low": 0.0,
+        "multi_micronutrient": 0.001,
+        "replete": 0.017,
+        "thyroid_overt": 0.004,
+        "thyroid_subclinical_autoimmune": 0.974,
+        "vitamin_deficient": 0.003
+      },
+      "3": {
+        "iron_deficient": 0.013,
+        "mineral_low": 0.208,
+        "multi_micronutrient": 0.176,
+        "replete": 0.449,
+        "thyroid_overt": 0.001,
+        "thyroid_subclinical_autoimmune": 0.109,
+        "vitamin_deficient": 0.044
+      },
+      "4": {
+        "iron_deficient": 0.368,
+        "mineral_low": 0.014,
+        "multi_micronutrient": 0.156,
+        "replete": 0.326,
+        "thyroid_overt": 0.001,
+        "thyroid_subclinical_autoimmune": 0.118,
+        "vitamin_deficient": 0.017
+      },
+      "5": {
+        "iron_deficient": 0.009,
+        "mineral_low": 0.012,
+        "multi_micronutrient": 0.01,
+        "replete": 0.081,
+        "thyroid_overt": 0.834,
+        "thyroid_subclinical_autoimmune": 0.036,
+        "vitamin_deficient": 0.018
+      },
+      "6": {
+        "iron_deficient": 0.005,
+        "mineral_low": 0.025,
+        "multi_micronutrient": 0.095,
+        "replete": 0.605,
+        "thyroid_overt": 0.0,
+        "thyroid_subclinical_autoimmune": 0.093,
+        "vitamin_deficient": 0.177
+      },
+      "7": {
+        "iron_deficient": 0.003,
+        "mineral_low": 0.032,
+        "multi_micronutrient": 0.015,
+        "replete": 0.852,
+        "thyroid_overt": 0.001,
+        "thyroid_subclinical_autoimmune": 0.08,
+        "vitamin_deficient": 0.018
+      },
+      "8": {
+        "iron_deficient": 0.0,
+        "mineral_low": 0.001,
+        "multi_micronutrient": 0.001,
+        "replete": 0.011,
+        "thyroid_overt": 0.85,
+        "thyroid_subclinical_autoimmune": 0.136,
+        "vitamin_deficient": 0.0
+      }
+    }
+  },
+  "risk": {
+    "fatigue": {
+      "auroc": 0.8100984286100532,
+      "auprc": 0.5856641148572528,
+      "brier": 0.11166487535931137,
+      "ece": 0.012166215910023242,
+      "baseline_logistic_auroc": 0.7828918850213946,
+      "prevalence": 0.18508655126498003,
+      "n_test": 6008,
+      "demographic_share_of_abs_shap": 0.1336,
+      "top_markers_by_mean_abs_shap": [
+        "FERRITIN",
+        "TSH",
+        "B12",
+        "sex"
+      ]
+    },
+    "brain_fog": {
+      "auroc": 0.6909174975419586,
+      "auprc": 0.4841039344316236,
+      "brier": 0.16094019556361808,
+      "ece": 0.011872220321259785,
+      "baseline_logistic_auroc": 0.6732924056258349,
+      "prevalence": 0.24084553928095873,
+      "n_test": 6008,
+      "demographic_share_of_abs_shap": 0.0067,
+      "top_markers_by_mean_abs_shap": [
+        "B12",
+        "TSH",
+        "FERRITIN",
+        "VITD"
+      ]
+    },
+    "hair_loss": {
+      "auroc": 0.743023433086696,
+      "auprc": 0.5200706119075877,
+      "brier": 0.14228377396852027,
+      "ece": 0.01550876420263099,
+      "baseline_logistic_auroc": 0.7220165793930055,
+      "prevalence": 0.22087217043941412,
+      "n_test": 6008,
+      "demographic_share_of_abs_shap": 0.2479,
+      "top_markers_by_mean_abs_shap": [
+        "FERRITIN",
+        "sex",
+        "TSH",
+        "ZINC"
+      ]
+    }
+  },
+  "ocr": {
+    "overall": {
+      "documents": 500,
+      "cer_mean": 0.0018,
+      "wer_mean": 0.0079,
+      "field_recall": 0.9903,
+      "field_value_accuracy": 0.9766,
+      "field_precision": 0.9862,
+      "wrong_values_flagged_low_confidence": 0.7843,
+      "seconds_per_doc": 0.422
+    },
+    "text_layer": {
+      "documents": 332,
+      "cer_mean": 0.0,
+      "wer_mean": 0.0,
+      "field_recall": 1.0,
+      "field_value_accuracy": 1.0,
+      "field_precision": 1.0,
+      "wrong_values_flagged_low_confidence": 0.0,
+      "seconds_per_doc": 0.008
+    },
+    "scanned": {
+      "documents": 168,
+      "cer_mean": 0.0055,
+      "wer_mean": 0.0235,
+      "field_recall": 0.9713,
+      "field_value_accuracy": 0.9306,
+      "field_precision": 0.9581,
+      "wrong_values_flagged_low_confidence": 0.7843,
+      "seconds_per_doc": 1.241
+    },
+    "by_template": {
+      "boxed_grid": {
+        "documents": 125,
+        "cer_mean": 0.0024,
+        "wer_mean": 0.0108,
+        "field_recall": 0.983,
+        "field_value_accuracy": 0.9564,
+        "field_precision": 0.9729,
+        "wrong_values_flagged_low_confidence": 0.84,
+        "seconds_per_doc": 0.426
+      },
+      "colon_inline": {
+        "documents": 125,
+        "cer_mean": 0.0009,
+        "wer_mean": 0.0041,
+        "field_recall": 0.9968,
+        "field_value_accuracy": 0.9968,
+        "field_precision": 1.0,
+        "wrong_values_flagged_low_confidence": 0.0,
+        "seconds_per_doc": 0.403
+      },
+      "columns": {
+        "documents": 125,
+        "cer_mean": 0.0029,
+        "wer_mean": 0.0126,
+        "field_recall": 0.9846,
+        "field_value_accuracy": 0.9615,
+        "field_precision": 0.9765,
+        "wrong_values_flagged_low_confidence": 0.6667,
+        "seconds_per_doc": 0.439
+      },
+      "pipe_table": {
+        "documents": 125,
+        "cer_mean": 0.0011,
+        "wer_mean": 0.0041,
+        "field_recall": 0.9968,
+        "field_value_accuracy": 0.9915,
+        "field_precision": 0.9947,
+        "wrong_values_flagged_low_confidence": 1.0,
+        "seconds_per_doc": 0.421
+      }
+    },
+    "metadata_accuracy": {
+      "sex": 0.998,
+      "age": 1.0,
+      "lab": 1.0,
+      "date": 0.994
+    },
+    "patient_name_leaks": 0,
+    "wall_seconds": 53.1,
+    "workers": 4,
+    "value_accuracy_by_marker": {
+      "TSH": 0.9785,
+      "FT3": 0.9832,
+      "FT4": 0.9427,
+      "TPOAB": 0.9801,
+      "VITD": 0.9706,
+      "B12": 0.9979,
+      "FERRITIN": 0.9812,
+      "MG": 0.9711,
+      "ZINC": 0.9915
+    }
+  },
+  "seconds": 59.4
+}

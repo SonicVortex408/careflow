@@ -31,8 +31,8 @@ export function Logo({ size = "md" }) {
         <Activity className="text-white" style={{ width: big ? 24 : 18, height: big ? 24 : 18 }} strokeWidth={2.4} />
       </div>
       <div>
-        <div className={`font-bold tracking-tight ${big ? "text-2xl" : "text-lg"}`} style={{ color: COLORS.ink }}>CareFlow</div>
-        {big && <div className="text-sm" style={{ color: COLORS.slate }}>Smart Hospital Queue &amp; Resource Management</div>}
+        <div className={`font-bold tracking-tight ${big ? "text-2xl" : "text-lg"}`} style={{ color: COLORS.ink }}>PolyMarker</div>
+        {big && <div className="text-sm" style={{ color: COLORS.slate }}>Thyroid &amp; micronutrient lab insights</div>}
       </div>
     </div>
   );

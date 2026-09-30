@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://polymarker.local/schemas/canonical_report.json",
+  "title": "Canonical lab report (output of polymarker_common.pipeline.ingest_*)",
+  "type": "object",
+  "required": ["pipeline_version", "catalog_version", "metadata", "biomarkers", "quality"],
+  "properties": {
+    "pipeline_version": {"type": "string"},
+    "catalog_version": {"type": "string"},
+    "ocr_method": {"type": "string"},
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "age": {"type": ["integer", "null"]},
+        "sex": {"enum": ["F", "M", null]},
+        "lab_provider": {"type": ["string", "null"]},
+        "collected_at": {"type": ["string", "null"]}
+      }
+    },
+    "biomarkers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "loinc", "value", "unit", "confidence"],
+        "properties": {
+          "key": {"enum": ["TSH", "FT3", "FT4", "TPOAB", "VITD", "B12", "FERRITIN", "MG", "ZINC"]},
+          "loinc": {"type": "string"},
+          "value": {"type": "number"},
+          "unit": {"type": "string"},
+          "raw_label": {"type": "string"},
+          "raw_value": {"type": "string"},
+          "raw_unit": {"type": "string"},
+          "qualifier": {"type": ["string", "null"]},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+          "unit_inferred": {"type": "boolean"},
+          "reference_low": {"type": "number"},
+          "reference_high": {"type": "number"}
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "required": ["issues", "completeness"],
+      "properties": {
+        "issues": {"type": "array"},
+        "completeness": {"type": "number"},
+        "missing_markers": {"type": "array", "items": {"type": "string"}},
+        "needs_clinician_attention": {"type": "boolean"},
+        "checks_run": {"type": "array"}
+      }
+    }
+  }
+}

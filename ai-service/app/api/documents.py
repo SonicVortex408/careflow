@@ -1,113 +1,41 @@
-from fastapi import APIRouter, UploadFile, File, Form
-from pathlib import Path
-import shutil
+"""General medical documents for the assistant (non-lab uploads).
 
-from app.retrieval.patient_ingest import (
-    ingest_patient_document
-)
+POST /api/documents/process  -> 202 {job_id}; poll /api/ocr/jobs/{job_id}.
+Previously this indexed synchronously and returned 200 with success:false on
+failure; it is now an async job with proper HTTP status codes.
+"""
 
+from __future__ import annotations
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+
+from app.core.config import get_settings
+from app.core.security import require_internal_key, safe_child, safe_suffix, validate_object_id
+from app.services.jobs import get_jobs
 
 router = APIRouter(
-    prefix="/api/documents",
-    tags=["documents"]
+    prefix="/api/documents", tags=["documents"], dependencies=[Depends(require_internal_key)]
 )
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-
-UPLOAD_DIR = PROJECT_ROOT / "patient_documents"
-
-UPLOAD_DIR.mkdir(
-    parents=True,
-    exist_ok=True
-)
-
-
-@router.post("/process")
+@router.post("/process", status_code=status.HTTP_202_ACCEPTED)
 async def process_document(
     file: UploadFile = File(...),
     patient_id: str = Form(...),
-    document_id: str = Form(...)
+    document_id: str = Form(...),
 ):
-    try:
-
-        # =========================
-        # 1. PATIENT DIRECTORY
-        # =========================
-
-        patient_dir = (
-            UPLOAD_DIR / patient_id
-        )
-
-        patient_dir.mkdir(
-            parents=True,
-            exist_ok=True
-        )
-
-
-        # =========================
-        # 2. SAVE DOCUMENT
-        # =========================
-
-        file_path = (
-            patient_dir / file.filename
-        )
-
-        with open(
-            file_path,
-            "wb"
-        ) as buffer:
-
-            shutil.copyfileobj(
-                file.file,
-                buffer
-            )
-
-
-        # =========================
-        # 3. INGEST DOCUMENT
-        # =========================
-
-        ingestion_result = (
-            ingest_patient_document(
-                patient_id=patient_id,
-                document_id=document_id,
-                file_path=file_path
-            )
-        )
-
-
-        # =========================
-        # 4. RETURN RESULT
-        # =========================
-
-        return {
-            "success": True,
-            "message": "Document uploaded and indexed successfully",
-
-            "patient_id": patient_id,
-
-            "document_id": document_id,
-
-            "filename": file.filename,
-
-            "path": str(file_path),
-
-            "chunks": ingestion_result["chunks"],
-
-            "index_path": ingestion_result["index_path"]
-        }
-
-
-    except Exception as error:
-
-        print(
-            "Document processing error:",
-            error
-        )
-
-        return {
-            "success": False,
-            "message": "Unable to process document",
-            "error": str(error)
-        }
+    s = get_settings()
+    pid = validate_object_id(patient_id)
+    did = validate_object_id(document_id, "document_id")
+    suffix = safe_suffix(file.filename, (".pdf", ".txt"))
+    directory = safe_child(s.patient_documents_dir, pid)
+    directory.mkdir(parents=True, exist_ok=True)
+    path = safe_child(directory, f"doc-{did}{suffix}")
+    data = await file.read(s.max_upload_bytes + 1)
+    if len(data) > s.max_upload_bytes:
+        raise HTTPException(status_code=413, detail="File too large")
+    path.write_bytes(data)
+    job_id = get_jobs().submit(
+        "index_document", {"path": str(path), "patient_id": pid, "document_id": did}
+    )
+    return {"job_id": job_id, "status": "queued", "document_id": did}

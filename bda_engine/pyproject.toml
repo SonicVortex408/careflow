@@ -1,0 +1,62 @@
+[project]
+name = "bda-engine"
+version = "0.1.0"
+description = "PolyMarker Analytics offline big-data engine: synthetic data lake, Spark/DuckDB ETL, batch OCR, feature engineering, clustering, functional-range discovery, symptom risk models."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "polymarker-common[ocr]",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "pyarrow>=16",
+    "duckdb>=1.1",
+    "scikit-learn>=1.5",
+    "xgboost-cpu>=2.1",
+    "shap>=0.46",
+    "faker>=28",
+    "reportlab>=4.2",
+    "matplotlib>=3.9",
+    "rapidfuzz>=3.9",
+]
+
+[project.optional-dependencies]
+spark = ["pyspark>=3.5,<4.1"]
+
+[project.scripts]
+bda = "bda_engine.pipeline:main"
+
+[tool.uv.sources]
+polymarker-common = { path = "../common", editable = true }
+
+[dependency-groups]
+dev = ["pytest>=8.3", "ruff>=0.6"]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+# The repository directory `bda_engine/` is itself the import package
+# (bda_engine.etl, bda_engine.models, ...), matching the documented layout
+# bda_engine/{schemas,scripts,etl,features,models}. Editable installs expose it
+# by putting the repository root on sys.path.
+[tool.hatch.build.targets.wheel]
+only-include = ["__init__.py", "config.py", "pipeline.py", "schemas", "scripts", "etl", "features", "models"]
+sources = {"" = "bda_engine"}
+
+[tool.hatch.build]
+dev-mode-dirs = [".."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["data", "artifacts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["bda_engine", "polymarker_common"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

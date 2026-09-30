@@ -18,6 +18,12 @@ const messageSchema = new mongoose.Schema(
         content: {
             type: String,
             required: true
+        },
+
+        // Deterministic escalation computed by the ai-service guardrails.
+        escalation: {
+            type: mongoose.Schema.Types.Mixed,
+            default: null
         }
     },
     {

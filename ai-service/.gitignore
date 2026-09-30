@@ -16,3 +16,7 @@ node_modules/
 
 # Logs
 *.log
+patient_documents/
+patient_faiss/
+.pytest_cache/
+.ruff_cache/

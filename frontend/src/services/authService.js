@@ -1,187 +1,60 @@
-const API_BASE_URL = "https://careflow-gwxc.onrender.com/api";
-/* =========================
-   USER AUTHENTICATION
-========================= */
+import { api, tokenStore } from "./apiClient.js";
 
-export const loginUser = async (email, password) => {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+function persist(token, account) {
+    tokenStore.set(token);
+    localStorage.setItem("user", JSON.stringify(account));
+    localStorage.setItem("role", account.role);
+    return account;
+}
+
+// Patients and clinicians share one sign-in; the server decides the role.
+export async function loginUser(email, password) {
+    const data = await api("/auth/login", { method: "POST", body: { email, password }, auth: false });
+    return persist(data.token, data.user);
+}
+
+export async function loginAdmin(email, password) {
+    const data = await api("/auth/admin/login", { method: "POST", body: { email, password }, auth: false });
+    return persist(data.token, { ...data.admin, role: "admin" });
+}
+
+// Public registration creates patient accounts only.
+export async function registerUser({ name, email, password, sex, birthYear }) {
+    const data = await api("/auth/register", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            email,
-            password,
-        }),
+        body: { name, email, password, sex: sex || null, birthYear: birthYear ? Number(birthYear) : null },
+        auth: false,
     });
+    return persist(data.token, data.user);
+}
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message || "Login failed");
-    }
-
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-    localStorage.setItem("role", "user");
-
-    return data;
-};
-
-
-/* =========================
-   ADMIN AUTHENTICATION
-========================= */
-
-export const loginAdmin = async (email, password) => {
-    const response = await fetch(`${API_BASE_URL}/auth/admin/login`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            email,
-            password,
-        }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message || "Admin login failed");
-    }
-
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.admin));
-    localStorage.setItem("role", "admin");
-
-    return data;
-};
-
-
-/* =========================
-   LOGOUT
-========================= */
-
-export const logout = () => {
-    localStorage.removeItem("token");
+export function logout() {
+    tokenStore.clear();
     localStorage.removeItem("user");
     localStorage.removeItem("role");
-};
+}
 
+export const getToken = () => tokenStore.get();
 
-/* =========================
-   LOCAL STORAGE HELPERS
-========================= */
-
-export const getToken = () => {
-    return localStorage.getItem("token");
-};
-
-export const getStoredUser = () => {
-    const user = localStorage.getItem("user");
-
-    return user ? JSON.parse(user) : null;
-};
-
-export const getRole = () => {
-    return localStorage.getItem("role");
-};
-
-
-/* =========================
-   CURRENT USER
-========================= */
-
-export const getCurrentUser = async () => {
-    const token = getToken();
-    const role = getRole();
-
-    if (!token || !role) {
+export function getStoredUser() {
+    try {
+        return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
         return null;
     }
+}
 
-    const endpoint =
-        role === "admin"
-            ? `${API_BASE_URL}/admin/profile`
-            : `${API_BASE_URL}/users/profile`;
+export async function getCurrentUser() {
+    if (!getToken()) return null;
+    const data = await api("/users/profile");
+    const user = data.user;
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("role", user.role);
+    return user;
+}
 
-    const response = await fetch(endpoint, {
-        method: "GET",
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
-
-    if (!response.ok) {
-        logout();
-        return null;
-    }
-
-    const data = await response.json();
-
-    return data;
-};
-
-
-/* =========================
-   REGISTER USER
-========================= */
-
-export const registerUser = async (name, email, password) => {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            name,
-            email,
-            password,
-        }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message || "Registration failed");
-    }
-
-    localStorage.setItem("token", data.token);
+export async function updateProfile(fields) {
+    const data = await api("/users/profile", { method: "PATCH", body: fields });
     localStorage.setItem("user", JSON.stringify(data.user));
-    localStorage.setItem("role", "user");
-
-    return data;
-};
-
-
-/* =========================
-   REGISTER ADMIN
-========================= */
-
-export const registerAdmin = async (name, email, password) => {
-    const response = await fetch(`${API_BASE_URL}/auth/admin/register`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            name,
-            email,
-            password,
-        }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message || "Admin registration failed");
-    }
-
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.admin));
-    localStorage.setItem("role", "admin");
-
-    return data;
-};
-
+    return data.user;
+}

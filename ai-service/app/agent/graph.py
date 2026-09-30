@@ -1,113 +1,68 @@
-from typing import Literal
+"""Agent graph + checkpointer (conversation memory).
 
-from langgraph.graph import (
-    StateGraph,
-    START,
-    END
-)
+    START -> retrieve -> llm_call <-> tool_node
+                         llm_call -> check -> (retry) llm_call
+                                           -> finalize -> END
+
+CHECKPOINTER=auto  Redis (langgraph-checkpoint-redis, needs Redis Stack modules)
+                   when reachable, otherwise in-memory with a warning.
+"""
+
+from __future__ import annotations
+
+import logging
+from functools import lru_cache
 
 from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.graph import END, START, StateGraph
 
-from app.agent.state import MessagesState
+from app.agent import nodes
+from app.agent.state import AgentState
+from app.core.config import get_settings
 
-from app.agent.nodes import (
-    llm_call,
-    tool_node,
-    handoff_check,
-    handoff_node
-)
+logger = logging.getLogger(__name__)
 
 
-def should_continue(
-    state: MessagesState
-) -> Literal["tool_node", "__end__"]:
+def get_checkpointer():
+    s = get_settings()
+    mode = s.checkpointer.lower()
+    if mode in ("auto", "redis"):
+        try:
+            from langgraph.checkpoint.redis import RedisSaver
 
-    last = state["messages"][-1]
-
-    if hasattr(last, "tool_calls") and last.tool_calls:
-
-        return "tool_node"
-
-    return "__end__"
-
-
-def route_after_handoff(
-    state: MessagesState
-) -> Literal["handoff", "__end__"]:
-
-    if state.get("handoff_required", False):
-
-        return "handoff"
-
-    return "__end__"
+            saver = RedisSaver(redis_url=s.redis_url, ttl={"default_ttl": 60 * 24 * 30})
+            saver.setup()
+            logger.info("Conversation memory: Redis")
+            return saver
+        except Exception as exc:  # noqa: BLE001
+            if mode == "redis":
+                raise
+            logger.warning(
+                "Redis checkpointer unavailable (%s); using in-memory", type(exc).__name__
+            )
+    return InMemorySaver()
 
 
-checkpointer = InMemorySaver()
-
-agent_builder = StateGraph(
-    MessagesState
-)
-
-
-agent_builder.add_node(
-    "llm_call",
-    llm_call
-)
-
-agent_builder.add_node(
-    "tool_node",
-    tool_node
-)
-
-agent_builder.add_node(
-    "handoff_check",
-    handoff_check
-)
-
-agent_builder.add_node(
-    "handoff",
-    handoff_node
-)
+def build_graph(checkpointer=None):
+    g = StateGraph(AgentState)
+    g.add_node("retrieve", nodes.retrieve)
+    g.add_node("llm_call", nodes.llm_call)
+    g.add_node("tool_node", nodes.tool_node)
+    g.add_node("check", nodes.check)
+    g.add_node("finalize", nodes.finalize)
+    g.add_edge(START, "retrieve")
+    g.add_edge("retrieve", "llm_call")
+    g.add_conditional_edges(
+        "llm_call", nodes.route_after_llm, {"tool_node": "tool_node", "check": "check"}
+    )
+    g.add_edge("tool_node", "llm_call")
+    g.add_conditional_edges(
+        "check", nodes.route_after_check, {"llm_call": "llm_call", "finalize": "finalize"}
+    )
+    g.add_edge("finalize", END)
+    return g.compile(checkpointer=checkpointer if checkpointer is not None else get_checkpointer())
 
 
-agent_builder.add_edge(
-    START,
-    "llm_call"
-)
-
-
-agent_builder.add_conditional_edges(
-    "llm_call",
-    should_continue,
-    {
-        "tool_node": "tool_node",
-        "__end__": "handoff_check"
-    }
-)
-
-
-agent_builder.add_edge(
-    "tool_node",
-    "llm_call"
-)
-
-
-agent_builder.add_conditional_edges(
-    "handoff_check",
-    route_after_handoff,
-    {
-        "handoff": "handoff",
-        "__end__": END
-    }
-)
-
-
-agent_builder.add_edge(
-    "handoff",
-    END
-)
-
-
-agent = agent_builder.compile(
-    checkpointer=checkpointer
-)
+@lru_cache(maxsize=1)
+def get_agent():
+    return build_graph()

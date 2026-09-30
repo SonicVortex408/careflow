@@ -138,7 +138,8 @@ ai-service/        extend: ocr.py, normalizer.py, data_quality.py, inference.py,
 bda_engine/        NEW  own pyproject (uv): schemas/ scripts/ etl/ features/ models/
 graph_service/     NEW  schema.cypher, seed.cypher, Python connector + tests
 evaluation/        NEW  metrics scripts, figures/, REPORT.md
-legacy/            queue-management pages, behind VITE_ENABLE_LEGACY_QUEUE
+common/            NEW  (as built) polymarker_common: catalog, normalizer, parser, OCR, quality, features
+models/            NEW  (as built) versioned reference artifacts + manifest.json
 docs/              CURRENT_STATE.md, ARCHITECTURE.md, DOMAIN_MISMATCH.md
 docker-compose.yml NEW  ai-service, backend, frontend, mongo, neo4j, redis, worker
 ```
@@ -167,7 +168,7 @@ All secrets live in `.env`, with a committed `.env.example` per service.
 | Var | Service | Notes |
 |---|---|---|
 | `VITE_API_BASE_URL` | frontend | replaces the hardcoded Render URL |
-| `VITE_ENABLE_LEGACY_QUEUE` | frontend | default `false` |
+| ~~`VITE_ENABLE_LEGACY_QUEUE`~~ | frontend | retired: the queue UI was adapted/removed (see §9) |
 | `PORT`, `MONGO_URI`, `JWT_SECRET`, `FRONTEND_URL` | backend | existing |
 | `AI_SERVICE_URL` | backend | **default must change 8000 → 8080** to match the ai-service container |
 | `LLM_PROVIDER`, `LLM_MODEL`, `GROQ_API_KEY` / `GOOGLE_API_KEY` | ai-service | provider becomes configurable |
@@ -202,3 +203,23 @@ All secrets live in `.env`, with a committed `.env.example` per service.
 | R10 | Vercel deployment breaks when the hardcoded base URL is removed | Medium | Medium | `VITE_API_BASE_URL` set in Vercel project settings before the change merges; verify the preview deployment on the Phase 1 PR |
 | R11 | LayoutLMv3 / PaddleOCR licensing and model download in CI | Low | Medium | Default off; CI runs Tesseract only |
 | R12 | Scope: four phases of work in one repo with no CI | High | Medium | One branch + one PR per phase; add GitHub Actions running lint + tests in Phase 1 |
+
+## 9. As built — deviations from this target (Phase 1–4 implementation)
+
+| Area | Target above | As built | Why |
+|---|---|---|---|
+| Shared code | normalizer / quality inside ai-service | New dependency-free `common/` package used by ai-service, bda_engine and graph_service | Batch (Spark) OCR and per-upload OCR must parse identically; one catalog for LOINC codes, units, ranges |
+| Legacy queue UI | quarantine behind `VITE_ENABLE_LEGACY_QUEUE`, remove in Phase 4 | Adapted per the "APPROVE and ADAPT" decision: shell → role-based navigation, Patients → review queue, Analytics → cohort analytics, Alerts → escalations; mock data and queue pages removed | Final Phase 4 state reached directly; `ChartCard`, `Card`, `Badges`, `Brand`, `ConfirmDialog`, tokens kept |
+| Checkpointer | Redis | Redis via `langgraph-checkpoint-redis`, which needs **Redis Stack** (RedisJSON + RediSearch); compose uses `redis/redis-stack-server`; falls back to memory when unavailable (`CHECKPOINTER=auto`) | Plain Redis lacks the modules |
+| Heavy deps | XGBoost only in bda_engine | ai-service depends on `xgboost-cpu` (small wheel) to evaluate boosters and TreeSHAP `pred_contribs`; `shap`, scikit-learn, Spark stay in bda_engine | Exact SHAP online without shipping the training stack |
+| Vector retrieval | FAISS | FAISS behind the optional `vector` extra; a BM25 fallback with the same metadata filter is the default | Keeps torch out of CI and the default image; graph retrieval is primary |
+| Job status | Celery | Celery + a Redis job record (distinguishes unknown ids from queued); `JOB_BACKEND=local` thread pool for dev/tests | |
+| Patient identity | ObjectId `patient_id` | Same, validated as 24-hex before any path join; chat thread ids namespaced by patient | R5 |
+| LLM | provider via env | Same; with no key every summary uses the deterministic template (still guardrailed) | App must run without secrets |
+
+Verified end to end: live Neo4j parity with the in-memory graph, Celery over
+Redis, Redis checkpointer across agent instances, and a Playwright run of
+patient upload → clinician sign-off → patient dashboard → assistant.
+The Python Docker images could not be built inside the development sandbox
+(its egress proxy blocks Debian mirrors and GitHub's container registry);
+`docker compose build` is exercised in CI instead.
