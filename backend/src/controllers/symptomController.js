@@ -1,7 +1,7 @@
 import SymptomEntry, { BRAIN_FOG_LEVELS, HAIR_LOSS_LEVELS } from "../models/SymptomEntry.js";
 
 const serialize = (s) => ({
-    id: s._id,
+    id: s.id,
     fatigueSeverity: s.fatigueSeverity,
     brainFogFrequency: s.brainFogFrequency,
     hairLoss: s.hairLoss,
@@ -25,7 +25,7 @@ export async function createSymptomEntry(req, res) {
     }
 
     const entry = await SymptomEntry.create({
-        patient: req.account._id,
+        patientId: req.account.id,
         fatigueSeverity: fatigue,
         brainFogFrequency,
         hairLoss,
@@ -37,6 +37,6 @@ export async function createSymptomEntry(req, res) {
 
 // GET /api/symptoms  (patient history, newest first)
 export async function listSymptomEntries(req, res) {
-    const entries = await SymptomEntry.find({ patient: req.account._id }).sort({ createdAt: -1 }).limit(50);
+    const entries = await SymptomEntry.listForPatient(req.account.id, 50);
     res.json({ success: true, entries: entries.map(serialize) });
 }

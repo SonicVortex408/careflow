@@ -6,7 +6,7 @@ import { publicUser } from "./authController.js";
 export const getAdminProfile = async (req, res) => {
     res.json({
         success: true,
-        admin: { id: req.account._id, name: req.account.name, email: req.account.email, role: "admin" },
+        admin: { id: req.account.id, name: req.account.name, email: req.account.email, role: "admin" },
     });
 };
 
@@ -18,7 +18,7 @@ export const createClinician = async (req, res) => {
         return res.status(400).json({ success: false, message: "Name, email and a password of 8+ characters are required" });
     }
 
-    if (await User.findOne({ email: String(email).toLowerCase() })) {
+    if (await User.findByEmail(email)) {
         return res.status(409).json({ success: false, message: "An account with this email already exists" });
     }
 
@@ -33,6 +33,6 @@ export const createClinician = async (req, res) => {
 };
 
 export const listClinicians = async (req, res) => {
-    const clinicians = await User.find({ role: "clinician" }).select("-password").sort({ createdAt: -1 });
+    const clinicians = await User.listByRole("clinician");
     res.json({ success: true, clinicians: clinicians.map(publicUser) });
 };

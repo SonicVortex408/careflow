@@ -1,12 +1,15 @@
-import Report, { SYNTHETIC_DATA_LABEL } from "../models/Report.js";
+import Report, { SYNTHETIC_DATA_LABEL, audit } from "../models/Report.js";
 import { AIServiceError, getJob } from "./aiService.js";
 
 /**
- * Pull the ai-service job state into the Report document.
+ * Pull the ai-service job state into the report row and return the current report.
  *
  * processing --job completed--> pending_clinician_review (interpretation stored,
  *                               NOT visible to the patient yet)
  * processing --job failed-----> failed
+ *
+ * Transitions are conditional on the row still being "processing", so
+ * concurrent polls apply each one exactly once.
  */
 export async function syncReport(report) {
     if (report.status !== "processing" || !report.jobId) {
@@ -20,8 +23,8 @@ export async function syncReport(report) {
         if (error instanceof AIServiceError && error.upstreamStatus === 404) {
             report.status = "failed";
             report.jobError = "Processing job was lost; please upload again.";
-            report.audit("job_lost");
-            await report.save();
+            audit(report, "job_lost");
+            return commit(report);
         }
         return report;
     }
@@ -31,7 +34,7 @@ export async function syncReport(report) {
         report.interpretation = interpretation;
         report.status = "pending_clinician_review";
         report.escalationLevel = interpretation?.escalation?.level || "routine";
-        report.audit("interpretation_ready", {
+        audit(report, "interpretation_ready", {
             detail: {
                 summarySource: interpretation?.summary?.source,
                 readabilityGrade: interpretation?.summary?.readability_grade,
@@ -40,24 +43,31 @@ export async function syncReport(report) {
                 markers: (interpretation?.extraction?.biomarkers || []).length,
             },
         });
-        await report.save();
-    } else if (job.status === "failed") {
+        return commit(report);
+    }
+    if (job.status === "failed") {
         report.status = "failed";
         report.jobError = job.error || "Processing failed";
-        report.audit("job_failed", { detail: { error: report.jobError } });
-        await report.save();
+        audit(report, "job_failed", { detail: { error: report.jobError } });
+        return commit(report);
     }
 
     return report;
 }
 
+async function commit(report) {
+    if (await Report.save(report, { expectStatus: "processing" })) return report;
+    // Another request applied the transition first; return what it stored.
+    return (await Report.findById(report.id)) || report;
+}
+
 export async function syncPendingForPatient(patientId) {
-    const pending = await Report.find({ patient: patientId, status: "processing" });
+    const pending = await Report.listProcessing({ patientId });
     await Promise.all(pending.map((r) => syncReport(r)));
 }
 
 export async function syncAllProcessing(limit = 50) {
-    const pending = await Report.find({ status: "processing" }).sort({ createdAt: 1 }).limit(limit);
+    const pending = await Report.listProcessing({ limit });
     await Promise.all(pending.map((r) => syncReport(r)));
 }
 
@@ -71,7 +81,7 @@ const STATUS_MESSAGES = {
 
 function base(report) {
     return {
-        id: report._id,
+        id: report.id,
         originalName: report.originalName,
         status: report.status,
         statusMessage: STATUS_MESSAGES[report.status],
@@ -117,9 +127,7 @@ export function serializeForPatient(report) {
 export function serializeForClinician(report) {
     return {
         ...base(report),
-        patient: report.patient?._id
-            ? { id: report.patient._id, name: report.patient.name, email: report.patient.email, sex: report.patient.sex, birthYear: report.patient.birthYear }
-            : report.patient,
+        patient: report.patient,
         escalationLevel: report.escalationLevel,
         jobError: report.jobError,
         proms: report.proms,
@@ -131,7 +139,7 @@ export function serializeForClinician(report) {
 
 /** Latest approved results, handed to the assistant as patient context. */
 export async function latestApprovedContext(patient) {
-    const report = await Report.findOne({ patient: patient._id, status: "approved" }).sort({ updatedAt: -1 });
+    const report = await Report.latestApproved(patient.id);
 
     if (!report?.interpretation) {
         return null;

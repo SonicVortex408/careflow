@@ -16,7 +16,7 @@ export async function createConversation(req, res) {
         const threadId = crypto.randomUUID();
 
         const conversation = await Conversation.create({
-            user: req.account._id,
+            userId: req.account.id,
             title: "New Conversation",
             threadId
         });
@@ -24,7 +24,7 @@ export async function createConversation(req, res) {
         return res.status(201).json({
             success: true,
             conversation: {
-                id: conversation._id,
+                id: conversation.id,
                 title: conversation.title,
                 threadId: conversation.threadId,
                 createdAt: conversation.createdAt,
@@ -55,13 +55,7 @@ export async function getConversationMessages(req, res) {
 
 
         // Make sure conversation belongs to logged-in user
-        const conversation = await Conversation.findOne({
-
-            _id: conversationId,
-
-            user: req.account._id
-
-        });
+        const conversation = await Conversation.findOwn(conversationId, req.account.id);
 
 
         if (!conversation) {
@@ -75,12 +69,7 @@ export async function getConversationMessages(req, res) {
 
 
         // Get all messages for this conversation
-        const messages = await Message.find({
-
-            conversation: conversation._id
-
-        })
-        .sort({ createdAt: 1 });
+        const messages = await Message.listForConversation(conversation.id);
 
 
         return res.status(200).json({
@@ -119,15 +108,12 @@ export async function getConversations(req, res) {
             });
         }
 
-        const conversations = await Conversation.find({
-            user: req.account._id
-        })
-        .sort({ updatedAt: -1 });
+        const conversations = await Conversation.listForUser(req.account.id);
 
         return res.status(200).json({
             success: true,
             conversations: conversations.map((conversation) => ({
-                id: conversation._id,
+                id: conversation.id,
                 title: conversation.title,
                 threadId: conversation.threadId,
                 createdAt: conversation.createdAt,

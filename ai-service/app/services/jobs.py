@@ -2,6 +2,8 @@
 
 JOB_BACKEND=celery  Celery over Redis (production / compose). A small Redis
                     record per job lets us tell "unknown id" from "queued".
+JOB_BACKEND=modal   a separate Modal function per job (deploy/modal_app.py); job
+                    records live in a modal.Dict shared by all containers.
 JOB_BACKEND=local   in-process thread pool + dict (local dev without Redis, tests).
 """
 
@@ -145,6 +147,79 @@ class CeleryJobs:
             return {"backend": self.name, "ok": False, "error": type(exc).__name__}
 
 
+class ModalJobs:
+    """Jobs as Modal function calls.
+
+    Modal containers do not share a disk, so the upload's bytes travel with the
+    call and the job container writes them back to the same path. ``store`` is
+    a ``modal.Dict`` and ``runner`` the deployed ``run_job`` function; both can
+    be injected for tests.
+    """
+
+    name = "modal"
+
+    def __init__(self, store=None, runner=None):
+        if store is None or runner is None:
+            import modal
+
+            s = get_settings()
+            if store is None:
+                store = modal.Dict.from_name(s.modal_job_dict, create_if_missing=True)
+            if runner is None:
+                runner = modal.Function.from_name(s.modal_app_name, "run_job")
+        self._store = store
+        self._runner = runner
+
+    def submit(self, kind, payload):
+        from pathlib import Path
+
+        job_id = str(uuid.uuid4())
+        self._store[job_id] = {
+            "job_id": job_id,
+            "kind": kind,
+            "status": "queued",
+            "created_at": _now(),
+        }
+        data = Path(payload["path"]).read_bytes() if payload.get("path") else None
+        try:
+            self._runner.spawn(job_id, kind, payload, data)
+        except Exception:
+            self._store.pop(job_id, None)
+            raise
+        return job_id
+
+    def get(self, job_id):
+        record = self._store.get(job_id)
+        return dict(record) if record else None
+
+    def health(self):
+        try:
+            self._store.contains("__health__")
+            return {"backend": self.name, "ok": True}
+        except Exception as exc:  # noqa: BLE001
+            return {"backend": self.name, "ok": False, "error": type(exc).__name__}
+
+
+def run_modal_job(store, job_id: str, kind: str, payload: dict, data: bytes | None) -> None:
+    """Body of the Modal ``run_job`` function: restore the file, run, record."""
+    from pathlib import Path
+
+    from app.worker.tasks_impl import TASKS
+
+    record = dict(store.get(job_id) or {"job_id": job_id, "kind": kind, "created_at": _now()})
+    store[job_id] = {**record, "status": "processing", "started_at": _now()}
+    try:
+        if data is not None:
+            path = Path(payload["path"])
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+        update = {"status": "completed", "result": TASKS[kind](payload)}
+    except Exception as exc:  # noqa: BLE001
+        logger.error("job %s failed: %s", job_id, traceback.format_exc(limit=3))
+        update = {"status": "failed", "error": type(exc).__name__}
+    store[job_id] = {**record, "started_at": _now(), **update, "finished_at": _now()}
+
+
 FILE_HANDOFF_TTL_SECONDS = 3600
 
 
@@ -156,7 +231,7 @@ def stash_file(redis_client, job_id: str, payload: dict[str, Any]) -> dict[str, 
     """Copy the uploaded file into Redis so a worker on another machine can read it.
 
     The API and the Celery worker only share a filesystem in docker-compose; on
-    hosts where each service has its own disk (e.g. Render) the worker restores
+    hosts where each service has its own disk the worker restores
     the file from Redis. Uploads are capped at 10 MB and expire after an hour.
     """
     path = payload.get("path")
@@ -189,4 +264,6 @@ def get_jobs() -> JobBackend:
     backend = get_settings().job_backend.lower()
     if backend == "local":
         return LocalJobs()
+    if backend == "modal":
+        return ModalJobs()
     return CeleryJobs()

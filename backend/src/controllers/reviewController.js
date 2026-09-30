@@ -1,4 +1,4 @@
-import Report from "../models/Report.js";
+import Report, { audit, auditEntry } from "../models/Report.js";
 import { serializeForClinician, syncAllProcessing } from "../services/reportService.js";
 
 const ESCALATION_ORDER = { emergency: 0, urgent: 1, priority: 2, routine: 3 };
@@ -8,18 +8,15 @@ const REVIEWABLE = ["pending_clinician_review", "approved", "rejected", "failed"
 export async function listReviews(req, res) {
     await syncAllProcessing();
     const status = REVIEWABLE.includes(req.query.status) ? req.query.status : "pending_clinician_review";
-    const reports = await Report.find({ status })
-        .populate("patient", "name email sex birthYear")
-        .sort({ createdAt: 1 })
-        .limit(200);
+    const reports = await Report.listByStatus(status, 200);
 
     const items = reports
         .map((r) => {
             const i = r.interpretation || {};
             return {
-                id: r._id,
+                id: r.id,
                 status: r.status,
-                patient: r.patient ? { id: r.patient._id, name: r.patient.name } : null,
+                patient: r.patient ? { id: r.patient.id, name: r.patient.name } : null,
                 originalName: r.originalName,
                 uploadedAt: r.createdAt,
                 escalationLevel: r.escalationLevel,
@@ -36,12 +33,13 @@ export async function listReviews(req, res) {
 
 // GET /api/reviews/:id
 export async function getReview(req, res) {
-    const report = await Report.findById(req.params.id).populate("patient", "name email sex birthYear");
+    const report = await Report.findById(req.params.id, { withPatient: true });
     if (!report) {
         return res.status(404).json({ success: false, message: "Report not found" });
     }
-    report.audit("viewed_by_reviewer", { actor: req.account._id, actorRole: req.role });
-    await report.save();
+    const entry = auditEntry("viewed_by_reviewer", { actor: req.account.id, actorRole: req.role });
+    await Report.appendAudit(report.id, entry);
+    report.auditTrail.push(entry);
     res.json({ success: true, report: serializeForClinician(report) });
 }
 
@@ -59,7 +57,7 @@ export async function submitReview(req, res) {
         return res.status(400).json({ success: false, message: "A comment is required when rejecting" });
     }
 
-    const report = await Report.findById(req.params.id);
+    const report = await Report.findById(req.params.id, { withPatient: true });
     if (!report) {
         return res.status(404).json({ success: false, message: "Report not found" });
     }
@@ -68,20 +66,24 @@ export async function submitReview(req, res) {
     }
 
     report.review = {
-        reviewer: req.account._id,
+        reviewer: req.account.id,
         reviewerName: req.account.name,
         decision,
         comment: String(comment).slice(0, 4000),
-        editedSummary: decision === "edit" ? String(editedSummary).slice(0, 20000) : undefined,
-        reviewedAt: new Date(),
+        ...(decision === "edit" ? { editedSummary: String(editedSummary).slice(0, 20000) } : {}),
+        reviewedAt: new Date().toISOString(),
     };
     report.status = decision === "reject" ? "rejected" : "approved";
-    report.audit(`review_${decision}`, {
-        actor: req.account._id,
+    audit(report, `review_${decision}`, {
+        actor: req.account.id,
         actorRole: req.role,
         detail: { comment: report.review.comment || null, edited: decision === "edit" },
     });
-    await report.save();
+
+    // Only one of two clinicians reviewing at the same time wins.
+    if (!(await Report.save(report, { expectStatus: "pending_clinician_review" }))) {
+        return res.status(409).json({ success: false, message: "Report was reviewed by someone else" });
+    }
 
     res.json({ success: true, report: serializeForClinician(report) });
 }

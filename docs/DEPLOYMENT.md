@@ -1,97 +1,150 @@
-# Deploying PolyMarker Analytics
+# Deploying PolyMarker Analytics (free tier)
 
 ```
-Vercel                 Render (render.yaml)                          Managed
-frontend  ──HTTPS──►  polymarker-backend (web) ──private──► polymarker-ai (private) ──► Neo4j Aura
-                             │                                    │
-                             └──► MongoDB Atlas      polymarker-redis (Key Value) ◄── polymarker-worker (Celery)
+Vercel (static)            Modal  (deploy/modal_app.py)                      Supabase
+frontend ──HTTPS──► polymarker-api   Express gateway ──────────────────► Postgres (users, reports, …)
+                          │                        └──────────────────► Storage (private bucket: uploads)
+                          │ X-Internal-Key
+                          ▼
+                    polymarker-ai    FastAPI ai-service ──spawn──► run_job  (OCR + interpretation)
+                                            └──── job state ────► modal.Dict
+                                                                          optional: Neo4j Aura Free, Groq
 ```
 
-The frontend is a static Vite build (Vercel). The ai-service cannot run on
-Vercel: it needs a long-running Celery worker, Tesseract and Redis, so the back
-end runs on Render from the blueprint in [`render.yaml`](../render.yaml).
-Deploy in this order: **databases → Render → Vercel**.
-
-## 1. Managed databases
-
-| Service | What to create | Value you will need |
+| Piece | Service | Free tier used |
 |---|---|---|
-| **MongoDB Atlas** | Free M0 cluster, a database user, Network Access `0.0.0.0/0` (Render has no fixed egress IP on starter plans) | `mongodb+srv://USER:PASS@cluster.xxxx.mongodb.net/polymarker` |
-| **Neo4j Aura** (optional) | Free AuraDB instance | `neo4j+s://xxxx.databases.neo4j.io` + password |
+| Frontend | Vercel Hobby | static Vite build |
+| Database + file storage | Supabase Free | Postgres 500 MB, Storage 1 GB |
+| Backend, ai-service, jobs | Modal Starter | monthly free compute credits; every function scales to zero |
+| Knowledge graph (optional) | Neo4j Aura Free | without it the ai-service uses the identical in-memory graph |
+| LLM (optional) | Groq free key | without it summaries use the deterministic template |
 
-Without Neo4j the ai-service uses the in-memory copy of the same knowledge
-graph (identical evidence chains), so Aura can be added later.
+Nothing here needs a credit card or a paid plan at demo scale. Limits change, so
+check each provider's pricing page. Deploy in this order: **Supabase → Modal →
+Vercel**, then come back to Modal once to set the Vercel URL.
 
-## 2. Render (backend, ai-service, worker, Redis)
+You need Python 3.10+ locally (for the `modal` CLI) and this repository checked
+out on `main`.
 
-1. Render dashboard → **New → Blueprint** → select `SonicVortex408/careflow`,
-   branch `main`.
-2. Render reads `render.yaml` and asks for the `sync: false` values:
+## 1. Supabase (database + storage)
 
-   | Variable | Service | Value |
-   |---|---|---|
-   | `MONGO_URI` | polymarker-backend | Atlas connection string |
-   | `FRONTEND_URL` | polymarker-backend | your Vercel URL, e.g. `https://careflow.vercel.app` (comma-separate several) |
-   | `SEED_*_EMAIL` / `SEED_*_PASSWORD` | polymarker-backend | first admin + demo clinician (created on deploy, idempotent) |
-   | `NEO4J_URI`, `NEO4J_PASSWORD` | polymarker-ai-env group | Aura values, or leave blank |
-   | `GROQ_API_KEY` | polymarker-ai-env group | optional; blank = deterministic template summaries |
+1. Create a project at [supabase.com](https://supabase.com) and note the
+   database password you choose.
+2. **Connection string.** Click **Connect** (top bar) → **Transaction pooler** →
+   copy the URI and fill in the password:
+   `postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres`.
+   Use the pooler, not the direct `db.<ref>.supabase.co` host: the direct host
+   is IPv6-only on the free plan, and the pooler also suits scale-to-zero containers.
+3. **API URL and secret key.** Project Settings → **API Keys**: copy a
+   **secret** key (`sb_secret_…`; the legacy `service_role` key also works). The
+   project URL is `https://<ref>.supabase.co`. The secret key stays on the
+   backend; the frontend never talks to Supabase directly.
 
-   `JWT_SECRET` and the backend↔ai-service `INTERNAL_API_KEY` are generated
-   automatically; the ai-service is a private service reachable only from the
-   backend.
-3. **Apply.** The first build takes ~10 minutes (Tesseract + Python deps).
-   The ai-service pre-deploy step loads the knowledge graph into Neo4j when
-   `NEO4J_URI` is set; the backend pre-deploy step creates the seed accounts.
-4. Check `https://polymarker-backend.onrender.com/api/health` → `{"status":"ok"}`.
+You do not create tables or buckets by hand. The backend applies
+`backend/src/db/schema.sql` on start and creates the private `lab-reports`
+bucket. Row level security is enabled on every table with no policies, so
+Supabase's public Data API returns nothing even with the anon key. Only the
+backend, which connects as the table owner, can read the data.
 
-**Cost.** The private service, background worker and pre-deploy commands need
-paid instances (`starter`, about $7/month each at the time of writing); Key
-Value runs on the free plan. To try it for free you can change
-`polymarker-backend` to `plan: free` and remove its `preDeployCommand` (then
-run `node src/scripts/seed.js` once from the Render shell), but the worker and
-private ai-service remain paid.
+## 2. Modal (backend + ai-service + jobs)
 
-**Differences from docker-compose, by design:**
+```bash
+pip install modal
+modal setup                       # opens the browser to sign in
 
-* Render services do not share a disk. Uploads are handed from the ai-service to
-  the worker through Redis (`polymarker:file:<job>`, 10 MB cap, 1 h TTL).
-* Render Key Value has no RedisJSON/RediSearch, so assistant conversation memory
-  falls back to in-process memory (it resets on redeploy). For persistent memory
-  point `REDIS_URL` of polymarker-ai at a Redis Stack instance (e.g. Redis Cloud)
-  and set `CHECKPOINTER=redis`.
-* The per-patient document index is written by the worker; the assistant's
-  answers rely on the clinician-approved results passed by the backend and on
-  the knowledge graph/KB, not on that index.
+# Shared secret between backend and ai-service
+modal secret create polymarker-shared INTERNAL_API_KEY=$(openssl rand -hex 32)
+
+# ai-service. LLM_PROVIDER=none means deterministic template summaries; for an LLM use
+#   LLM_PROVIDER=groq GROQ_API_KEY=gsk_...    and for Neo4j Aura add
+#   NEO4J_URI=neo4j+s://xxxx.databases.neo4j.io NEO4J_PASSWORD=...
+modal secret create polymarker-ai LLM_PROVIDER=none
+
+# Backend. FRONTEND_URL is a placeholder until step 3 gives you the Vercel URL.
+modal secret create polymarker-backend \
+  DATABASE_URL='postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres' \
+  JWT_SECRET=$(openssl rand -hex 32) \
+  FRONTEND_URL=https://example.vercel.app \
+  SUPABASE_URL=https://<ref>.supabase.co \
+  SUPABASE_SERVICE_KEY=sb_secret_... \
+  SEED_ADMIN_EMAIL=you@example.com         SEED_ADMIN_PASSWORD='choose-a-strong-one' \
+  SEED_CLINICIAN_EMAIL=doctor@example.com  SEED_CLINICIAN_PASSWORD='choose-a-strong-one'
+
+modal deploy deploy/modal_app.py          # first build ~5 min (Tesseract + Python + Node deps)
+modal run deploy/modal_app.py::seed       # schema + bucket + seed accounts (idempotent)
+modal run deploy/modal_app.py::load_graph # only if you set NEO4J_URI
+```
+
+`modal deploy` prints two URLs:
+
+* `https://<workspace>--polymarker-api.modal.run`: the backend. Check
+  `…/api/health` → `{"success":true,"status":"ok"}`.
+* `https://<workspace>--polymarker-ai.modal.run`: the ai-service. The backend
+  finds this URL by itself, and every `/api` route rejects callers without the
+  internal key.
 
 ## 3. Vercel (frontend)
 
-1. Merge the release branch into `main`.
-2. Vercel → **Add New → Project** → import `SonicVortex408/careflow` →
-   click **Import single project** next to **frontend** (do not use the
-   multi-service option). Root Directory `frontend`, preset Vite.
-3. Environment Variables → `VITE_API_BASE_URL` =
-   `https://polymarker-backend.onrender.com/api` (Production and Preview).
-4. **Deploy**, then add the resulting URL to the backend's `FRONTEND_URL` on
-   Render (CORS) and redeploy the backend.
+1. Vercel → **Add New → Project** → import `SonicVortex408/careflow` →
+   **Import single project** next to **frontend**. Root Directory `frontend`,
+   preset Vite.
+2. Environment Variables → `VITE_API_BASE_URL` =
+   `https://<workspace>--polymarker-api.modal.run/api` (Production and Preview).
+3. **Deploy.** The variable is read at build time; after changing it, redeploy.
+4. Put the Vercel URL into the backend's CORS list and redeploy:
 
-The variable is read at build time; after changing it, redeploy the frontend.
+   ```bash
+   modal secret create --force polymarker-backend ...same values... FRONTEND_URL=https://<your-app>.vercel.app
+   modal deploy deploy/modal_app.py
+   ```
+
+   (or edit the secret in the Modal dashboard → Secrets, then redeploy).
+   `FRONTEND_URL` accepts several comma-separated origins (e.g. production +
+   a preview URL).
 
 ## 4. Smoke test
 
 1. Sign in as the seeded clinician; the review queue should load.
 2. Register a patient, complete the symptom check-in and upload a lab report
    (any PDF from `bda_engine`'s generator, or a text report).
-3. The upload page shows "Waiting for clinician review" within about a minute.
+3. The upload page shows "Waiting for clinician review" within about a minute
+   (longer on the first upload while the ai-service cold-starts).
 4. Approve it as the clinician; the patient dashboard then shows gauges, radar,
    cohort map and risk.
 
-If uploads stay in "processing", check the **polymarker-worker** logs; if the
-UI shows "Cannot reach the server", check `VITE_API_BASE_URL` and the backend's
-`FRONTEND_URL`.
+If uploads stay in "processing", open the Modal dashboard → app `polymarker` →
+`run_job` logs. If the UI shows "Cannot reach the server", check
+`VITE_API_BASE_URL` and the backend's `FRONTEND_URL`. If the API logs
+"Postgres connection failed", check that `DATABASE_URL` is the pooler URL.
+
+## Free-tier behaviour to know about
+
+* **Cold starts.** Functions scale to zero after 5 idle minutes. The first
+  request afterwards takes a few seconds for the API and 10–20 s for the
+  ai-service. That keeps the deployment within the free credits; for a live
+  demo, open the site a minute early.
+* **Supabase pauses** free projects after about a week without activity.
+  Restore it from the dashboard (data is kept).
+* **Assistant memory** lives in the serving ai-service container (there is no
+  Redis on Modal), so a conversation's earlier turns are forgotten after the
+  container scales down. Messages themselves are stored in Postgres and stay
+  visible in the UI.
+* **Per-patient document index.** It is written in the job container and not
+  kept. The assistant's answers use the clinician-approved results that the
+  backend passes in, plus the knowledge graph and the medical knowledge base.
+* **Uploads** are stored in the private Supabase bucket and sent to the
+  ai-service with the job; deleting a report deletes the stored file.
+
+## Local development
+
+`docker compose up --build` runs the same code with plain Postgres, Redis +
+Celery and Neo4j instead of Supabase and Modal (see the README). Backend tests
+need a Postgres to create throwaway databases in:
+`DATABASE_URL_TEST=postgres://postgres:postgres@localhost:5432/postgres npm test`.
 
 ## Retraining models
 
 `models/` is baked into the ai-service image. To publish new artifacts, run
 `uv run bda all` (or `docker compose --profile ml run --rm bda all`), commit
-the updated `models/`, and redeploy; the pre-deploy step reloads the
-synthetic-derived bands into Neo4j.
+the updated `models/`, run `modal deploy deploy/modal_app.py`, and, with Neo4j,
+`modal run deploy/modal_app.py::load_graph`.

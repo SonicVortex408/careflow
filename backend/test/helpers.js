@@ -1,5 +1,5 @@
 import express from "express";
-import mongoose from "mongoose";
+import pg from "pg";
 import multer from "multer";
 import os from "os";
 import path from "path";
@@ -66,7 +66,20 @@ export function startFakeAI() {
     });
 }
 
-export async function setupEnv() {
+const TEST_DB = `pm_test_${process.pid}_${Date.now()}`;
+const ADMIN_URL = process.env.DATABASE_URL_TEST || "postgres://postgres:pg@127.0.0.1:5432/postgres";
+
+async function admin(sql) {
+    const client = new pg.Client({ connectionString: ADMIN_URL });
+    await client.connect();
+    try {
+        await client.query(sql);
+    } finally {
+        await client.end();
+    }
+}
+
+export async function setupEnv({ supabaseUrl = null } = {}) {
     const fake = await startFakeAI();
     process.env.NODE_ENV = "test";
     process.env.AI_SERVICE_URL = fake.url;
@@ -74,15 +87,28 @@ export async function setupEnv() {
     process.env.JWT_SECRET = "test-secret";
     process.env.UPLOAD_DIR = path.join(os.tmpdir(), `pm-uploads-${process.pid}`);
     process.env.AUTH_RATE_LIMIT = "1000";
-    const uri = process.env.MONGO_URI_TEST || "mongodb://127.0.0.1:27017/polymarker_test";
-    const dbName = `pm_test_${process.pid}_${Date.now()}`;
-    await mongoose.connect(uri, { dbName });
+    if (supabaseUrl) {
+        process.env.SUPABASE_URL = supabaseUrl;
+        process.env.SUPABASE_SERVICE_KEY = "test-service-key";
+    } else {
+        delete process.env.SUPABASE_URL;
+    }
+
+    // A throwaway database per test run.
+    await admin(`CREATE DATABASE ${TEST_DB}`);
+    const url = new URL(ADMIN_URL);
+    url.pathname = `/${TEST_DB}`;
+    process.env.DATABASE_URL = url.toString();
+
+    const { migrate } = await import("../src/config/db.js");
+    await migrate();
     const { default: app } = await import("../src/app.js");
     return { app, fake };
 }
 
 export async function teardown(fake) {
-    await mongoose.connection.dropDatabase();
-    await mongoose.disconnect();
+    const { closePool } = await import("../src/config/db.js");
+    await closePool();
+    await admin(`DROP DATABASE IF EXISTS ${TEST_DB}`);
     fake.server.close();
 }
