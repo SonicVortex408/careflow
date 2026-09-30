@@ -1,9 +1,4 @@
-import crypto from "crypto";
-import fs from "fs";
 import multer from "multer";
-import path from "path";
-
-import env from "../config/env.js";
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
@@ -14,18 +9,9 @@ const ALLOWED = {
     "image/jpeg": ".jpg",
 };
 
-function makeUpload(subdir, allowedTypes) {
-    const uploadDir = path.resolve(process.cwd(), env.uploadDir, subdir);
-
-    fs.mkdirSync(uploadDir, { recursive: true });
-
-    const storage = multer.diskStorage({
-        destination: (req, file, cb) => cb(null, uploadDir),
-
-        // Never reuse the client's filename on disk.
-        filename: (req, file, cb) => cb(null, `${Date.now()}-${crypto.randomUUID()}${ALLOWED[file.mimetype]}`),
-    });
-
+// Uploads are kept in memory (10 MB cap), forwarded to the ai-service and stored
+// by storageService; the backend needs no persistent disk.
+function makeUpload(allowedTypes) {
     const fileFilter = (req, file, cb) => {
         if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
@@ -36,10 +22,10 @@ function makeUpload(subdir, allowedTypes) {
         }
     };
 
-    return multer({ storage, fileFilter, limits: { fileSize: MAX_UPLOAD_BYTES } });
+    return multer({ storage: multer.memoryStorage(), fileFilter, limits: { fileSize: MAX_UPLOAD_BYTES } });
 }
 
-export const reportUpload = makeUpload("reports", Object.keys(ALLOWED));
-export const documentUpload = makeUpload("medical-documents", ["application/pdf", "text/plain"]);
+export const reportUpload = makeUpload(Object.keys(ALLOWED));
+export const documentUpload = makeUpload(["application/pdf", "text/plain"]);
 
 export default documentUpload;

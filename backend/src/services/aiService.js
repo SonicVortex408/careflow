@@ -1,5 +1,3 @@
-import fs from "fs";
-
 import env from "../config/env.js";
 
 export class AIServiceError extends Error {
@@ -56,19 +54,17 @@ const jsonBody = (payload) => ({
     headers: { "Content-Type": "application/json" },
 });
 
-async function fileForm(filePath, mimeType, originalName, fields) {
+function fileForm(buffer, mimeType, originalName, fields) {
     const form = new FormData();
-    // openAsBlob streams from disk instead of reading the whole upload into memory.
-    const blob = await fs.openAsBlob(filePath, { type: mimeType });
-    form.append("file", blob, originalName);
+    form.append("file", new Blob([buffer], { type: mimeType }), originalName);
     for (const [key, value] of Object.entries(fields)) {
         if (value !== undefined && value !== null) form.append(key, typeof value === "string" ? value : String(value));
     }
     return form;
 }
 
-export async function enqueueReport({ filePath, mimeType, originalName, reportId, patientId, proms, sex, age }) {
-    const form = await fileForm(filePath, mimeType, originalName, {
+export async function enqueueReport({ buffer, mimeType, originalName, reportId, patientId, proms, sex, age }) {
+    const form = fileForm(buffer, mimeType, originalName, {
         report_id: reportId,
         patient_id: patientId,
         proms: proms ? JSON.stringify(proms) : undefined,
@@ -78,8 +74,8 @@ export async function enqueueReport({ filePath, mimeType, originalName, reportId
     return aiFetch("/api/ocr", { method: "POST", body: form });
 }
 
-export async function enqueueDocument({ filePath, mimeType, originalName, documentId, patientId }) {
-    const form = await fileForm(filePath, mimeType, originalName, {
+export async function enqueueDocument({ buffer, mimeType, originalName, documentId, patientId }) {
+    const form = fileForm(buffer, mimeType, originalName, {
         document_id: documentId,
         patient_id: patientId,
     });

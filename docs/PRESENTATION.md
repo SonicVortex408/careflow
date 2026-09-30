@@ -11,7 +11,7 @@ end-to-end run on the synthetic demo data).
    multi-biomarker clustering, symptom correlation and functional-range
    discovery in unstructured health records.* Synthetic-data rule stated up front.
 3. **Architecture.** Component diagram from `docs/ARCHITECTURE.md` §2: React →
-   Express gateway → FastAPI + Celery + LangGraph → Neo4j / Redis / Mongo; offline
+   Express gateway → FastAPI + Celery/Modal jobs + LangGraph → Neo4j / Redis / Postgres; offline
    bda_engine → versioned artifacts.
 4. **Volume & Variety.** 50k patients, 0.5 M rows, 5 heterogeneous labs, 500
    PDFs (35 % scanned); bronze/silver/gold Parquet lake. (`README.md` 4-V table)
@@ -37,8 +37,9 @@ end-to-end run on the synthetic demo data).
     range), radar, cohort map, symptom likelihood, evidence, appointment guide.
 14. **Assistant.** `images/assistant.png`: grounded answer + disclaimer; red-flag
     escalation demo ("chest pain").
-15. **Engineering quality.** 137 automated tests (+3 live-integration) across 6 projects, live Neo4j /
-    Redis / Mongo in CI, Docker Compose, env-driven config.
+15. **Engineering quality.** 143 automated tests (+3 live-integration) across 6 projects, live Neo4j /
+    Redis / Postgres in CI, Docker Compose, free-tier deployment (Vercel +
+    Supabase + Modal), env-driven config.
 16. **Limitations & next steps.** Synthetic data only; LLM path unevaluated
     without a key; OCR on real faxes/photos; LayoutLMv3 fine-tuning;
     de-identified real-world validation; clinician-configured escalation

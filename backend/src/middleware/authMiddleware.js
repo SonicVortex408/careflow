@@ -32,11 +32,11 @@ const protect = async (req, res, next) => {
         let role;
 
         if (USER_TOKEN_ROLES.has(decoded.role)) {
-            account = await User.findById(decoded.id).select("-password");
+            account = await User.findById(decoded.id);
             // The database, not the token, is authoritative for the role.
             role = account?.role || "patient";
         } else if (decoded.role === "admin") {
-            account = await Admin.findById(decoded.id).select("-password");
+            account = await Admin.findById(decoded.id);
             role = "admin";
         } else {
             return res.status(401).json({
@@ -52,6 +52,8 @@ const protect = async (req, res, next) => {
             });
         }
 
+        // Password hashes never travel further than the auth routes.
+        delete account.password;
         req.account = account;
         req.role = role;
 

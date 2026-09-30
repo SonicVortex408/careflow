@@ -66,7 +66,7 @@ flowchart TB
     end
 
     subgraph data["Data stores"]
-        MONGO[("MongoDB<br/>users · reports · conversations")]
+        PG[("Postgres (Supabase)<br/>users · reports · conversations")]
         REDIS[("Redis<br/>broker + job status")]
         NEO[("Neo4j<br/>Biomarker·LOINC·FunctionalRange<br/>Condition·Symptom")]
         FAISS[("FAISS<br/>medical KB + per-patient")]
@@ -83,8 +83,8 @@ flowchart TB
     OCRW --> NORM --> DQ --> INFER
     INFER --> GRAPHRAG --> GUARD --> REPORTS
 
-    AUTH --> MONGO
-    REPORTS --> MONGO
+    AUTH --> PG
+    REPORTS --> PG
     INFER -. loads .-> ART
     GRAPHRAG --> NEO
     GRAPHRAG --> FAISS
@@ -141,14 +141,15 @@ evaluation/        NEW  metrics scripts, figures/, REPORT.md
 common/            NEW  (as built) polymarker_common: catalog, normalizer, parser, OCR, quality, features
 models/            NEW  (as built) versioned reference artifacts + manifest.json
 docs/              CURRENT_STATE.md, ARCHITECTURE.md, DOMAIN_MISMATCH.md
-docker-compose.yml NEW  ai-service, backend, frontend, mongo, neo4j, redis, worker
+docker-compose.yml NEW  ai-service, backend, frontend, postgres, neo4j, redis, worker
+deploy/modal_app.py NEW  production: ai-service + job runner + backend on Modal
 ```
 
 ## 5. Key design decisions
 
 | # | Decision | Rationale / alternative rejected |
 |---|---|---|
-| 1 | Keep MongoDB as the operational store; Parquet is the analytics lake | Mongo is already wired end-to-end. Postgres would be a rewrite. |
+| 1 | ~~Keep MongoDB as the operational store~~ **Revised:** Postgres (Supabase in production) is the operational store; Parquet is the analytics lake | Chosen for an all-free deployment (Supabase Postgres + Storage, Modal compute). The Mongoose models became small SQL repositories; ids stay 24-hex strings so decision 3 still holds. RLS is enabled on every table so Supabase's public Data API exposes nothing. |
 | 2 | Add `role: patient \| clinician` to the existing `User` model; keep `Admin` for platform admin | Avoids a third collection and keeps `authMiddleware`'s two-collection lookup working. |
 | 3 | Patient identity stays the Mongo `_id` string already used as `patient_id` in FAISS paths | No migration of existing per-patient indexes. `patient_id` gets validated as a 24-hex ObjectId before any path join (current path-traversal surface). |
 | 4 | New Python code in `bda_engine/` and `graph_service/` as **separate uv projects** | Keeps heavy PySpark/XGBoost deps out of the ai-service runtime image. |
@@ -169,10 +170,11 @@ All secrets live in `.env`, with a committed `.env.example` per service.
 |---|---|---|
 | `VITE_API_BASE_URL` | frontend | replaces the hardcoded Render URL |
 | ~~`VITE_ENABLE_LEGACY_QUEUE`~~ | frontend | retired: the queue UI was adapted/removed (see §9) |
-| `PORT`, `MONGO_URI`, `JWT_SECRET`, `FRONTEND_URL` | backend | existing |
+| `PORT`, `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL` | backend | `DATABASE_URL` replaced `MONGO_URI` |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `STORAGE_BUCKET` | backend | uploaded originals in a private Supabase Storage bucket (local disk when unset) |
 | `AI_SERVICE_URL` | backend | **default must change 8000 → 8080** to match the ai-service container |
 | `LLM_PROVIDER`, `LLM_MODEL`, `GROQ_API_KEY` / `GOOGLE_API_KEY` | ai-service | provider becomes configurable |
-| `REDIS_URL`, `CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND` | ai-service, worker | new |
+| `REDIS_URL`, `CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND` | ai-service, worker | new (docker-compose); on Modal `JOB_BACKEND=modal` needs none of them |
 | `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD` | ai-service, graph_service | new |
 | `OCR_ENGINE`, `ENABLE_LAYOUTLMV3` | ai-service | feature flags |
 | `ETL_ENGINE` (`spark`\|`duckdb`), `SYNTHETIC_SEED` | bda_engine | new |

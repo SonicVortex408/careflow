@@ -7,7 +7,7 @@ import generateToken from "../utils/generateToken.js";
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
 export const publicUser = (user) => ({
-    id: user._id,
+    id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
@@ -30,7 +30,7 @@ export const registerUser = async (req, res) => {
         return res.status(400).json({ success: false, message: "Password must be at least 8 characters" });
     }
 
-    const existingUser = await User.findOne({ email: String(email).toLowerCase() });
+    const existingUser = await User.findByEmail(email);
 
     if (existingUser) {
         return res.status(409).json({ success: false, message: "User already exists" });
@@ -48,7 +48,7 @@ export const registerUser = async (req, res) => {
     res.status(201).json({
         success: true,
         message: "User registered successfully",
-        token: generateToken(user._id, user.role),
+        token: generateToken(user.id, user.role),
         user: publicUser(user),
     });
 };
@@ -57,7 +57,7 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
     const { email, password } = req.body || {};
 
-    const user = email ? await User.findOne({ email: String(email).toLowerCase() }) : null;
+    const user = email ? await User.findByEmail(email) : null;
 
     if (!user || !password || !(await bcrypt.compare(password, user.password))) {
         return res.status(401).json({ success: false, message: "Invalid credentials" });
@@ -66,7 +66,7 @@ export const loginUser = async (req, res) => {
     res.json({
         success: true,
         message: "Login successful",
-        token: generateToken(user._id, user.role),
+        token: generateToken(user.id, user.role),
         user: publicUser(user),
     });
 };
@@ -74,7 +74,7 @@ export const loginUser = async (req, res) => {
 export const loginAdmin = async (req, res) => {
     const { email, password } = req.body || {};
 
-    const admin = email ? await Admin.findOne({ email: String(email).toLowerCase() }) : null;
+    const admin = email ? await Admin.findByEmail(email) : null;
 
     if (!admin || !password || !(await bcrypt.compare(password, admin.password))) {
         return res.status(401).json({ success: false, message: "Invalid credentials" });
@@ -83,7 +83,7 @@ export const loginAdmin = async (req, res) => {
     res.json({
         success: true,
         message: "Admin login successful",
-        token: generateToken(admin._id, "admin"),
-        admin: { id: admin._id, name: admin.name, email: admin.email, role: "admin" },
+        token: generateToken(admin.id, "admin"),
+        admin: { id: admin.id, name: admin.name, email: admin.email, role: "admin" },
     });
 };

@@ -22,10 +22,7 @@ export async function chatWithAI(req, res) {
     }
 
     // Conversation must belong to the authenticated user.
-    const conversation = await Conversation.findOne({
-        _id: conversationId,
-        user: req.account._id
-    });
+    const conversation = await Conversation.findOwn(conversationId, req.account.id);
 
     if (!conversation) {
         return res.status(404).json({
@@ -35,14 +32,12 @@ export async function chatWithAI(req, res) {
     }
 
     await Message.create({
-        conversation: conversation._id,
+        conversationId: conversation.id,
         role: "user",
         content: message
     });
 
-    if (conversation.title === "New Conversation") {
-        conversation.title = message.substring(0, 100);
-    }
+    const newTitle = conversation.title === "New Conversation" ? message.substring(0, 100) : null;
 
     // Only clinician-approved results are ever given to the assistant as context.
     const patientContext = req.role === "patient"
@@ -54,7 +49,7 @@ export async function chatWithAI(req, res) {
         result = await sendMessageToAI(
             message,
             conversation.threadId,
-            req.account._id.toString(),
+            req.account.id,
             patientContext
         );
     } catch (error) {
@@ -65,14 +60,13 @@ export async function chatWithAI(req, res) {
     }
 
     await Message.create({
-        conversation: conversation._id,
+        conversationId: conversation.id,
         role: "assistant",
         content: result.response,
         escalation: result.escalation || null
     });
 
-    conversation.updatedAt = new Date();
-    await conversation.save();
+    await Conversation.touch(conversation.id, newTitle);
 
     return res.status(200).json({
         success: true,

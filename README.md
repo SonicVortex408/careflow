@@ -31,9 +31,9 @@ frontend/  React 18 + Vite + Tailwind (Vercel)
    │  clinician: review queue · sign-off · escalations · cohort analytics      admin: clinicians
    ▼  VITE_API_BASE_URL
 backend/   Express 5 API gateway · JWT roles patient|clinician|admin · Report workflow
-   │       processing → pending_clinician_review → approved | rejected        MongoDB
+   │       processing → pending_clinician_review → approved | rejected   Postgres (Supabase)
    ▼  X-Internal-Key
-ai-service/ FastAPI + LangGraph ─── Celery worker ── Redis (broker, results, checkpointer)
+ai-service/ FastAPI + LangGraph ─── jobs: Celery + Redis (compose) | Modal functions (prod)
    │   /api/ocr → OCR → normalize → quality → inference → graph evidence → summary → guardrails
    ├── graph_service/  Neo4j schema + seed + connector (in-memory fallback)
    └── models/         versioned artifacts ◄── bda_engine/ (offline, PySpark | DuckDB)
@@ -49,7 +49,7 @@ Results: [`evaluation/REPORT.md`](evaluation/REPORT.md).
 
 ```bash
 cp .env.example .env          # set JWT_SECRET, AI_INTERNAL_KEY; optionally GROQ_API_KEY
-docker compose up --build     # mongo, redis-stack, neo4j, ai-service, worker, backend, frontend
+docker compose up --build     # postgres, redis-stack, neo4j, ai-service, worker, backend, frontend
 ```
 
 Open http://localhost:5173 and sign in with the seeded demo accounts (change the
@@ -73,17 +73,18 @@ Minimum resources: 4 CPU / 6 GB RAM for the core stack (Neo4j heap is capped at
 | graph_service | `cd graph_service && uv sync && uv run pytest` |
 | bda_engine | `cd bda_engine && uv sync --extra spark && uv run bda all && uv run pytest` |
 | ai-service | `cd ai-service && uv sync && JOB_BACKEND=local uv run uvicorn app.main:app --port 8080` |
-| backend | `cd backend && npm ci && npm run dev` · tests: `MONGO_URI_TEST=... npm test` |
+| backend | `cd backend && npm ci && npm run migrate && npm run dev` · tests: `DATABASE_URL_TEST=postgres://…/postgres npm test` |
 | frontend | `cd frontend && npm ci && VITE_API_BASE_URL=http://localhost:5000/api npm run dev` |
 
 Each service has a `.env.example`. Tesseract is needed for OCR of scanned
 documents (`apt install tesseract-ocr`); Java 17+ for PySpark.
 
-**Production deployment:** frontend on Vercel, back end on Render via the
-blueprint in [`render.yaml`](render.yaml), MongoDB Atlas and (optionally) Neo4j
-Aura — step by step in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Set
-`VITE_API_BASE_URL` in Vercel for every environment; the frontend contains no
-hardcoded backend URL (CI fails if one is reintroduced).
+**Production deployment (all free tiers):** frontend on Vercel, database and
+file storage on Supabase, backend + ai-service + jobs on Modal from
+[`deploy/modal_app.py`](deploy/modal_app.py), optionally Neo4j Aura. Step by
+step in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Set `VITE_API_BASE_URL` in
+Vercel for every environment; the frontend contains no hardcoded backend URL
+(CI fails if one is reintroduced).
 
 ## Big-data framing (the four Vs)
 
@@ -106,9 +107,10 @@ hardcoded backend URL (CI fails if one is reintroduced).
 ## Tests
 
 Every service has an automated suite, run in CI (`.github/workflows/ci.yml`)
-with live Neo4j, Redis Stack and MongoDB service containers:
-common 45 · graph_service 10 · bda_engine 13 · ai-service 41 (+3 live) ·
-backend 11 · frontend 14.
+with live Neo4j, Redis Stack and Postgres service containers, and a build check
+of the Modal app:
+common 45 · graph_service 10 · bda_engine 13 · ai-service 43 (+3 live) ·
+backend 18 · frontend 14.
 
 ## Safety model
 

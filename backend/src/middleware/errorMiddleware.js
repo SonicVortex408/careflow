@@ -14,12 +14,14 @@ export const errorHandler = (err, req, res, next) => {
     if (err instanceof multer.MulterError) {
         status = err.code === "LIMIT_FILE_SIZE" ? 413 : 400;
         message = err.code === "LIMIT_FILE_SIZE" ? "File is too large (max 10 MB)" : err.message;
-    } else if (err.name === "CastError") {
-        status = 404;
-        message = "Resource not found";
-    } else if (err.name === "ValidationError") {
+    } else if (err.code === "23505") {
+        // Postgres unique violation (e.g. two sign-ups racing for one email).
+        status = 409;
+        message = "Already exists";
+    } else if (["23514", "22P02", "22001", "22003"].includes(err.code)) {
+        // check constraint / invalid text representation / too long / out of range
         status = 400;
-        message = err.message;
+        message = "Invalid input";
     } else if (err.type === "entity.parse.failed") {
         status = 400;
         message = "Malformed JSON body";

@@ -1,4 +1,7 @@
 import time
+from pathlib import Path
+
+import pytest
 
 from .conftest import OTHER_PATIENT, PATIENT, REPORT, SAMPLE_REPORT
 
@@ -177,3 +180,58 @@ def test_file_handoff_restores_upload_on_a_separate_worker_disk(tmp_path, monkey
     src.unlink()  # the worker's disk does not have the file
     jobs.ensure_local_file(payload)
     assert src.read_text() == SAMPLE_REPORT
+
+
+class _FakeModalDict(dict):
+    def contains(self, key):
+        return key in self
+
+
+def test_modal_jobs_run_on_a_separate_container_disk(tmp_path):
+    """JOB_BACKEND=modal: the upload's bytes travel with the call."""
+    from app.services import jobs
+
+    store = _FakeModalDict()
+    calls = []
+
+    class Runner:
+        def spawn(self, job_id, kind, payload, data):
+            calls.append(job_id)
+            assert store[job_id]["status"] == "queued"
+            Path(payload["path"]).unlink()  # the job container has its own disk
+            jobs.run_modal_job(store, job_id, kind, payload, data)
+
+    src = tmp_path / "r.txt"
+    src.write_text(SAMPLE_REPORT)
+    backend = jobs.ModalJobs(store=store, runner=Runner())
+    job_id = backend.submit(
+        "process_report", {"path": str(src), "patient_id": PATIENT, "report_id": REPORT}
+    )
+    job = backend.get(job_id)
+    assert calls == [job_id]
+    assert job["status"] == "completed", job
+    assert {b["key"] for b in job["result"]["extraction"]["biomarkers"]} >= {"TSH", "FERRITIN"}
+    assert job["result"]["review"]["status"] == "pending_clinician_review"
+    assert backend.get("missing") is None
+    assert backend.health() == {"backend": "modal", "ok": True}
+
+
+def test_modal_jobs_record_failures_and_drop_unsent_jobs(tmp_path):
+    from app.services import jobs
+
+    store = _FakeModalDict()
+
+    class Broken:
+        def spawn(self, *args):
+            raise ConnectionError("modal unreachable")
+
+    src = tmp_path / "r.txt"
+    src.write_text(SAMPLE_REPORT)
+    with pytest.raises(ConnectionError):
+        jobs.ModalJobs(store=store, runner=Broken()).submit(
+            "process_report", {"path": str(src), "patient_id": PATIENT}
+        )
+    assert store == {}, "a job that never started leaves no queued record"
+
+    jobs.run_modal_job(store, "j1", "index_document", {"path": str(tmp_path / "nope.txt")}, None)
+    assert store["j1"]["status"] == "failed" and store["j1"]["error"]

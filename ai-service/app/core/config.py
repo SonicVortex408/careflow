@@ -31,8 +31,12 @@ class Settings(BaseSettings):
 
     # --- Jobs
     job_backend: str = Field(
-        "celery", description="celery | local (in-process thread pool, dev/tests)"
+        "celery",
+        description="celery | modal (Modal functions) | local (in-process, dev/tests)",
     )
+    # JOB_BACKEND=modal: deployed app name (deploy/modal_app.py) + job-state Dict.
+    modal_app_name: str = "polymarker"
+    modal_job_dict: str = "polymarker-jobs"
     redis_url: str = "redis://localhost:6379/0"
     celery_broker_url: str = ""
     celery_result_backend: str = ""
