@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 def process_report(payload: dict[str, Any]) -> dict[str, Any]:
     from app.retrieval.patient_index import index_patient_text
     from app.services.interpretation import interpret_document
+    from app.services.jobs import ensure_local_file
 
+    ensure_local_file(payload)
     path = Path(payload["path"])
     result = interpret_document(
         path,
@@ -42,6 +44,9 @@ def process_report(payload: dict[str, Any]) -> dict[str, Any]:
 
 def index_document(payload: dict[str, Any]) -> dict[str, Any]:
     from app.retrieval.patient_index import index_patient_file
+    from app.services.jobs import ensure_local_file
+
+    ensure_local_file(payload)
 
     chunks = index_patient_file(
         payload["patient_id"], payload["document_id"], Path(payload["path"])

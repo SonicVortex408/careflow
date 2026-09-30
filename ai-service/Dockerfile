@@ -31,6 +31,8 @@ RUN uv sync --frozen --no-dev --no-install-project \
 
 COPY ai-service/app ./app
 COPY ai-service/knowledge_base ./knowledge_base
+# Reference model artifacts baked in (compose mounts ./models over this path).
+COPY models /models
 RUN if [ "$INSTALL_VECTOR" = "true" ]; then \
       uv sync --frozen --no-dev --extra vector --no-install-package torch \
       && /opt/venv/bin/python -m app.retrieval.kb build; \

@@ -115,6 +115,7 @@ class CeleryJobs:
         job_id = str(uuid.uuid4())
         record = {"job_id": job_id, "kind": kind, "created_at": _now()}
         self._redis.set(self._key(job_id), json.dumps(record), ex=self._ttl)
+        payload = stash_file(self._redis, job_id, payload)
         self._app.send_task(self._TASK_NAMES[kind], args=[payload], task_id=job_id)
         return job_id
 
@@ -142,6 +143,45 @@ class CeleryJobs:
             return {"backend": self.name, "ok": True}
         except Exception as exc:  # noqa: BLE001
             return {"backend": self.name, "ok": False, "error": type(exc).__name__}
+
+
+FILE_HANDOFF_TTL_SECONDS = 3600
+
+
+def _file_key(job_id: str) -> str:
+    return f"polymarker:file:{job_id}"
+
+
+def stash_file(redis_client, job_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+    """Copy the uploaded file into Redis so a worker on another machine can read it.
+
+    The API and the Celery worker only share a filesystem in docker-compose; on
+    hosts where each service has its own disk (e.g. Render) the worker restores
+    the file from Redis. Uploads are capped at 10 MB and expire after an hour.
+    """
+    path = payload.get("path")
+    if not path:
+        return payload
+    with open(path, "rb") as fh:
+        redis_client.set(_file_key(job_id), fh.read(), ex=FILE_HANDOFF_TTL_SECONDS)
+    return {**payload, "file_key": _file_key(job_id)}
+
+
+def ensure_local_file(payload: dict[str, Any]) -> None:
+    """Worker side of ``stash_file``: restore the upload if this disk lacks it."""
+    from pathlib import Path
+
+    path = Path(payload["path"])
+    key = payload.get("file_key")
+    if path.exists() or not key:
+        return
+    import redis
+
+    data = redis.Redis.from_url(get_settings().redis_url).get(key)
+    if data is None:
+        raise FileNotFoundError("Uploaded file expired before processing")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data)
 
 
 @lru_cache(maxsize=1)

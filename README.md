@@ -79,9 +79,11 @@ Minimum resources: 4 CPU / 6 GB RAM for the core stack (Neo4j heap is capped at
 Each service has a `.env.example`. Tesseract is needed for OCR of scanned
 documents (`apt install tesseract-ocr`); Java 17+ for PySpark.
 
-**Vercel:** set `VITE_API_BASE_URL` in the project settings for every
-environment before deploying. The frontend no longer contains a hardcoded
-backend URL (CI fails if one is reintroduced).
+**Production deployment:** frontend on Vercel, back end on Render via the
+blueprint in [`render.yaml`](render.yaml), MongoDB Atlas and (optionally) Neo4j
+Aura — step by step in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Set
+`VITE_API_BASE_URL` in Vercel for every environment; the frontend contains no
+hardcoded backend URL (CI fails if one is reintroduced).
 
 ## Big-data framing (the four Vs)
 
@@ -105,7 +107,7 @@ backend URL (CI fails if one is reintroduced).
 
 Every service has an automated suite, run in CI (`.github/workflows/ci.yml`)
 with live Neo4j, Redis Stack and MongoDB service containers:
-common 45 · graph_service 10 · bda_engine 13 · ai-service 40 (+3 live) ·
+common 45 · graph_service 10 · bda_engine 13 · ai-service 41 (+3 live) ·
 backend 11 · frontend 14.
 
 ## Safety model

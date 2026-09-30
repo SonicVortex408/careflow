@@ -159,3 +159,21 @@ def test_chat_red_flag_escalates(client):
     body = r.json()
     assert body["escalation"]["level"] == "emergency"
     assert body["response"].startswith("If you have chest pain")
+
+
+def test_file_handoff_restores_upload_on_a_separate_worker_disk(tmp_path, monkeypatch):
+    """On hosts without a shared disk the worker restores the upload from Redis."""
+    import fakeredis
+
+    from app.services import jobs
+
+    server = fakeredis.FakeServer()
+    client = fakeredis.FakeRedis(server=server)
+    monkeypatch.setattr("redis.Redis.from_url", lambda *a, **k: fakeredis.FakeRedis(server=server))
+    src = tmp_path / "api-disk" / "r.txt"
+    src.parent.mkdir()
+    src.write_text(SAMPLE_REPORT)
+    payload = jobs.stash_file(client, "job-1", {"path": str(src), "patient_id": PATIENT})
+    src.unlink()  # the worker's disk does not have the file
+    jobs.ensure_local_file(payload)
+    assert src.read_text() == SAMPLE_REPORT

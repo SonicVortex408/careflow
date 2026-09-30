@@ -16,10 +16,13 @@ const env = {
     jwtSecret: process.env.JWT_SECRET || "dev-only-insecure-secret",
 
     // ai-service container listens on 8080 (was wrongly defaulted to 8000).
-    aiServiceUrl: process.env.AI_SERVICE_URL || "http://localhost:8080",
+    // AI_SERVICE_HOSTPORT is what Render's fromService reference provides (host:port).
+    aiServiceUrl:
+        process.env.AI_SERVICE_URL ||
+        (process.env.AI_SERVICE_HOSTPORT ? `http://${process.env.AI_SERVICE_HOSTPORT}` : "http://localhost:8080"),
 
     // Shared secret sent to ai-service as X-Internal-Key.
-    aiInternalKey: process.env.AI_INTERNAL_KEY || "",
+    aiInternalKey: process.env.AI_INTERNAL_KEY || process.env.INTERNAL_API_KEY || "",
 
     aiTimeoutMs: Number(process.env.AI_TIMEOUT_MS || 60000),
 

@@ -37,7 +37,7 @@ end-to-end run on the synthetic demo data).
     range), radar, cohort map, symptom likelihood, evidence, appointment guide.
 14. **Assistant.** `images/assistant.png`: grounded answer + disclaimer; red-flag
     escalation demo ("chest pain").
-15. **Engineering quality.** 136 automated tests (+3 live-integration) across 6 projects, live Neo4j /
+15. **Engineering quality.** 137 automated tests (+3 live-integration) across 6 projects, live Neo4j /
     Redis / Mongo in CI, Docker Compose, env-driven config.
 16. **Limitations & next steps.** Synthetic data only; LLM path unevaluated
     without a key; OCR on real faxes/photos; LayoutLMv3 fine-tuning;
