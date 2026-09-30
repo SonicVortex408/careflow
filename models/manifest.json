@@ -1,0 +1,91 @@
+{
+  "manifest_version": 1,
+  "semver": "1.0.0",
+  "seed": 42,
+  "created_at": "2026-09-29T20:07:32+00:00",
+  "catalog_version": "1.0.0",
+  "label": "Derived from synthetic data, for research/demo purposes, not clinical guidance.",
+  "artifacts": {
+    "feature_spec": {
+      "path": "feature_spec_1.0.0_s42.json",
+      "kind": "json",
+      "sha256": "7ab5497ec4a0781e15c6da2f77a6940b87f09ac842522e62161f48b5afacc0d0",
+      "bytes": 2604
+    },
+    "cluster_model": {
+      "path": "cluster_model_1.0.0_s42.json",
+      "kind": "json",
+      "sha256": "f6c54fd8f6bdf53b3c156a0f01c35dbdb340b97d56efed1dc360fb7d19e51edf",
+      "bytes": 28912
+    },
+    "cohort_projection": {
+      "path": "cohort_projection_1.0.0_s42.json",
+      "kind": "json",
+      "sha256": "630bc7c6f298b005f9c3a1953435ad46ce2fb127e41874443d94a110465073cd",
+      "bytes": 146142
+    },
+    "functional_bands": {
+      "path": "functional_bands_1.0.0_s42.json",
+      "kind": "json",
+      "sha256": "3369f5ee96aa5e16e07fe0450771f8bfc60f06a22e045a954d20f2d1026637f0",
+      "bytes": 46477
+    },
+    "population_stats": {
+      "path": "population_stats_1.0.0_s42.json",
+      "kind": "json",
+      "sha256": "152b94fcce39dec441363c99fe2aaf0a6fe3b7944e97815b022ce690e3421d17",
+      "bytes": 1591
+    },
+    "correlations": {
+      "path": "correlations_1.0.0_s42.json",
+      "kind": "json",
+      "sha256": "7abaab0d625b3395bbb82f37f865a4fa80d94a1f3e8eeadedfebf84a248cb7c0",
+      "bytes": 3590
+    },
+    "risk_fatigue": {
+      "path": "risk_fatigue_1.0.0_s42.ubj",
+      "kind": "xgboost_ubj",
+      "sha256": "9bd14cfab81aafe3034a57c01bb69cc865bf551ba09107167c3b3683e25f2aa8",
+      "bytes": 229647
+    },
+    "risk_brain_fog": {
+      "path": "risk_brain_fog_1.0.0_s42.ubj",
+      "kind": "xgboost_ubj",
+      "sha256": "a7a5bf662338e3c761c5229a1b71679c773c782c3d2410abc698456ce8f026ca",
+      "bytes": 124433
+    },
+    "risk_hair_loss": {
+      "path": "risk_hair_loss_1.0.0_s42.ubj",
+      "kind": "xgboost_ubj",
+      "sha256": "5703caa7b657adc6db8279e763dc369760bf4c40a2a7f73e5126aa4d85bea760",
+      "bytes": 221079
+    },
+    "risk_meta": {
+      "path": "risk_meta_1.0.0_s42.json",
+      "kind": "json",
+      "sha256": "96b11777f6c813ea0d4164b81a5e7fe6459738b3f15b1f0f380cca53cf86c61e",
+      "bytes": 20559
+    },
+    "training_report": {
+      "path": "training_report_1.0.0_s42.json",
+      "kind": "json",
+      "sha256": "a655545d095128e7e9794ed602cd5f4a57342e03d4c80f27d719bc04fe95a893",
+      "bytes": 6792
+    }
+  },
+  "data": {
+    "fingerprint": "e5d0b10ab348f752",
+    "patients": 40049,
+    "synthetic": true,
+    "note": "Derived from synthetic data, for research/demo purposes, not clinical guidance."
+  },
+  "summary": {
+    "kmeans_k": 9,
+    "kmeans_silhouette": 0.1345,
+    "auroc": {
+      "fatigue": 0.8101,
+      "brain_fog": 0.6909,
+      "hair_loss": 0.743
+    }
+  }
+}

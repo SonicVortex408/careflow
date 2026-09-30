@@ -1,0 +1,159 @@
+# PolyMarker Analytics - full stack.
+#
+#   cp .env.example .env              # set secrets
+#   docker compose up --build         # core stack (~4 GB RAM)
+#   docker compose --profile ml run --rm bda all   # regenerate data + retrain models (~8 GB RAM, optional)
+#
+# Frontend http://localhost:5173 · API http://localhost:5000/api · ai-service http://localhost:8080/docs
+# Neo4j browser http://localhost:7474
+
+x-ai-env: &ai-env
+  JOB_BACKEND: celery
+  REDIS_URL: redis://redis:6379/0
+  CHECKPOINTER: redis
+  NEO4J_URI: bolt://neo4j:7687
+  NEO4J_USER: neo4j
+  NEO4J_PASSWORD: ${NEO4J_PASSWORD:-polymarker-dev}
+  INTERNAL_API_KEY: ${AI_INTERNAL_KEY:-dev-internal-key}
+  LLM_PROVIDER: ${LLM_PROVIDER:-groq}
+  LLM_MODEL: ${LLM_MODEL:-openai/gpt-oss-20b}
+  GROQ_API_KEY: ${GROQ_API_KEY:-}
+  GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+  OCR_ENGINE: ${OCR_ENGINE:-tesseract}
+  ENABLE_LAYOUTLMV3: ${ENABLE_LAYOUTLMV3:-false}
+  MODEL_ARTIFACT_DIR: /models
+  CORS_ORIGINS: http://localhost:5173
+
+services:
+  # Plain Postgres locally; Supabase Postgres in production (docs/DEPLOYMENT.md).
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: polymarker
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-polymarker}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "polymarker"]
+      interval: 5s
+      retries: 20
+
+  redis:
+    # Redis Stack: broker + result backend for Celery, and the LangGraph
+    # checkpointer (needs RedisJSON + RediSearch).
+    image: redis/redis-stack-server:7.4.0-v1
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 10
+
+  neo4j:
+    image: neo4j:5.26-community
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-polymarker-dev}
+      NEO4J_server_memory_heap_max__size: 512m
+      NEO4J_server_memory_pagecache_size: 256m
+    ports: ["7474:7474", "7687:7687"]
+    volumes: [neo4j_data:/data]
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p \"$${NEO4J_AUTH#neo4j/}\" 'RETURN 1' || exit 1"]
+      interval: 10s
+      retries: 20
+
+  graph-seed:
+    # One-shot: schema + curated seed + synthetic-derived bands/correlations.
+    build: { context: ., dockerfile: ai-service/Dockerfile }
+    command: ["python", "-m", "graph_service.loader", "--artifacts", "/models"]
+    environment: *ai-env
+    volumes: ["./models:/models:ro"]
+    depends_on:
+      neo4j: { condition: service_healthy }
+    restart: "no"
+
+  ai-service:
+    build: { context: ., dockerfile: ai-service/Dockerfile }
+    environment: *ai-env
+    ports: ["8080:8080"]
+    volumes:
+      - ./models:/models:ro
+      - patient_docs:/srv/ai-service/patient_documents
+      - patient_index:/srv/ai-service/patient_faiss
+    depends_on:
+      redis: { condition: service_healthy }
+      neo4j: { condition: service_healthy }
+
+  worker:
+    build: { context: ., dockerfile: ai-service/Dockerfile }
+    command: ["celery", "-A", "app.worker.celery_app", "worker", "--loglevel=info", "--concurrency=2"]
+    environment: *ai-env
+    volumes:
+      - ./models:/models:ro
+      - patient_docs:/srv/ai-service/patient_documents
+      - patient_index:/srv/ai-service/patient_faiss
+    depends_on:
+      redis: { condition: service_healthy }
+      neo4j: { condition: service_healthy }
+    healthcheck:
+      disable: true
+
+  backend:
+    build: ./backend
+    environment:
+      PORT: 5000
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-polymarker}@postgres:5432/polymarker
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      NODE_ENV: ${NODE_ENV:-development}
+      FRONTEND_URL: http://localhost:5173
+      AI_SERVICE_URL: http://ai-service:8080
+      AI_INTERNAL_KEY: ${AI_INTERNAL_KEY:-dev-internal-key}
+    ports: ["5000:5000"]
+    volumes: [uploads:/app/uploads]
+    depends_on:
+      postgres: { condition: service_healthy }
+      ai-service: { condition: service_started }
+
+  seed:
+    # One-shot demo accounts (risk R8). Change the passwords in .env.
+    build: ./backend
+    command: ["node", "src/scripts/seed.js"]
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-polymarker}@postgres:5432/polymarker
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@polymarker.local}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-admin-demo-pass}
+      SEED_CLINICIAN_EMAIL: ${SEED_CLINICIAN_EMAIL:-clinician@polymarker.local}
+      SEED_CLINICIAN_PASSWORD: ${SEED_CLINICIAN_PASSWORD:-clinician-demo-pass}
+      SEED_PATIENT_EMAIL: ${SEED_PATIENT_EMAIL:-patient@polymarker.local}
+      SEED_PATIENT_PASSWORD: ${SEED_PATIENT_PASSWORD:-patient-demo-pass}
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:5000/api}
+    ports: ["5173:80"]
+    depends_on: [backend]
+
+  bda:
+    profiles: ["ml"]
+    build: { context: ., dockerfile: bda_engine/Dockerfile }
+    environment:
+      ETL_ENGINE: ${ETL_ENGINE:-spark}
+      SYNTHETIC_SEED: ${SYNTHETIC_SEED:-42}
+      N_PATIENTS: ${N_PATIENTS:-50000}
+      N_PDFS: ${N_PDFS:-500}
+    volumes:
+      - ./models:/models
+      - bda_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+  neo4j_data:
+  patient_docs:
+  patient_index:
+  uploads:
+  bda_data:

@@ -1,0 +1,158 @@
+{
+ "label": "Derived from synthetic data, for research/demo purposes, not clinical guidance.",
+ "version": "1.0.0",
+ "columns": [
+  "log_TSH",
+  "log_FT3",
+  "log_FT4",
+  "log_TPOAB",
+  "log_VITD",
+  "log_B12",
+  "log_FERRITIN",
+  "MG",
+  "ZINC",
+  "ft3_ft4_ratio",
+  "log_ferritin_to_tsh",
+  "log_tsh_x_ft4",
+  "low_iron_x_high_tsh",
+  "log_tpo_x_log_tsh",
+  "log_b12_x_log_vitd",
+  "micronutrient_deficit_count",
+  "sex_female",
+  "age",
+  "TSH_missing",
+  "FT3_missing",
+  "FT4_missing",
+  "TPOAB_missing",
+  "VITD_missing",
+  "B12_missing",
+  "FERRITIN_missing",
+  "MG_missing",
+  "ZINC_missing"
+ ],
+ "impute": {
+  "F|0": {
+   "TSH": 1.78,
+   "FT3": 4.92,
+   "FT4": 15.3,
+   "TPOAB": 9.15,
+   "VITD": 67.6416,
+   "B12": 329.0,
+   "FERRITIN": 47.95,
+   "MG": 0.854,
+   "ZINC": 13.5
+  },
+  "F|1": {
+   "TSH": 1.77,
+   "FT3": 4.94,
+   "FT4": 15.315299999999999,
+   "TPOAB": 9.0,
+   "VITD": 67.1424,
+   "B12": 330.0,
+   "FERRITIN": 48.6,
+   "MG": 0.855,
+   "ZINC": 13.616999999999999
+  },
+  "F|2": {
+   "TSH": 1.82,
+   "FT3": 4.976640000000001,
+   "FT4": 15.315299999999999,
+   "TPOAB": 9.0,
+   "VITD": 67.392,
+   "B12": 334.2234,
+   "FERRITIN": 52.2,
+   "MG": 0.852,
+   "ZINC": 13.6476
+  },
+  "F|3": {
+   "TSH": 1.84,
+   "FT3": 4.93,
+   "FT4": 15.3,
+   "TPOAB": 9.06,
+   "VITD": 66.6432,
+   "B12": 331.0,
+   "FERRITIN": 52.1,
+   "MG": 0.8515979999999999,
+   "ZINC": 13.5711
+  },
+  "M|0": {
+   "TSH": 1.8,
+   "FT3": 5.01,
+   "FT4": 15.315299999999999,
+   "TPOAB": 9.0,
+   "VITD": 67.1424,
+   "B12": 334.0,
+   "FERRITIN": 124.0,
+   "MG": 0.855712,
+   "ZINC": 13.7
+  },
+  "M|1": {
+   "TSH": 1.76,
+   "FT3": 5.0,
+   "FT4": 15.315299999999999,
+   "TPOAB": 9.0,
+   "VITD": 66.6432,
+   "B12": 327.0,
+   "FERRITIN": 124.0,
+   "MG": 0.852,
+   "ZINC": 13.6
+  },
+  "M|2": {
+   "TSH": 1.81,
+   "FT3": 5.02,
+   "FT4": 15.315299999999999,
+   "TPOAB": 9.0,
+   "VITD": 66.89280000000001,
+   "B12": 331.2722,
+   "FERRITIN": 123.0,
+   "MG": 0.855,
+   "ZINC": 13.5558
+  },
+  "M|3": {
+   "TSH": 1.79,
+   "FT3": 4.992,
+   "FT4": 15.315299999999999,
+   "TPOAB": 9.0,
+   "VITD": 67.392,
+   "B12": 331.2722,
+   "FERRITIN": 125.0,
+   "MG": 0.855,
+   "ZINC": 13.6476
+  }
+ },
+ "global_median": {
+  "TSH": 1.79,
+  "FT3": 4.97,
+  "FT4": 15.315299999999999,
+  "TPOAB": 9.0,
+  "VITD": 67.1424,
+  "B12": 331.0,
+  "FERRITIN": 70.1,
+  "MG": 0.854,
+  "ZINC": 13.6
+ },
+ "log_markers": [
+  "TSH",
+  "FT3",
+  "FT4",
+  "TPOAB",
+  "VITD",
+  "B12",
+  "FERRITIN"
+ ],
+ "linear_markers": [
+  "MG",
+  "ZINC"
+ ],
+ "age_bands": [
+  0,
+  30,
+  45,
+  60,
+  200
+ ],
+ "eps": 0.001,
+ "notes": [
+  "Imputation medians are derived from synthetic data."
+ ]
+}
