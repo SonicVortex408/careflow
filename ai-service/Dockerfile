@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir "uv==0.8.17"
 WORKDIR /srv
 COPY common ./common
 COPY graph_service ./graph_service
-COPY ai-service/pyproject.toml ai-service/uv.lock ./ai-service/
+COPY ai-service/pyproject.toml ai-service/uv.lock ai-service/README.md ./ai-service/
 
 WORKDIR /srv/ai-service
 ARG INSTALL_VECTOR=false

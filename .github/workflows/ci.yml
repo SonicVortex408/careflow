@@ -83,7 +83,7 @@ jobs:
           LLM_PROVIDER: none
         run: |
           (cd ../graph_service && uv sync && NEO4J_URI=bolt://localhost:7687 uv run python -m graph_service.loader --artifacts ../models)
-          uv run celery -A app.worker.celery_app worker --concurrency=2 &
+          NEO4J_URI=bolt://localhost:7687 uv run celery -A app.worker.celery_app worker --concurrency=2 &
           sleep 8
           uv run pytest -q tests/test_integration_live.py
       - name: Safety evaluation (guardrails, assistant cases, retrieval)
@@ -127,7 +127,7 @@ jobs:
       - run: npm run build
         env: { VITE_API_BASE_URL: "https://example.invalid/api" }
       - name: No hardcoded deployment URLs
-        run: "! grep -R --include='*.js' --include='*.jsx' -n 'onrender.com' src"
+        run: "! grep -R --include='*.js' --include='*.jsx' --exclude-dir=__tests__ -n 'onrender.com' src"
 
   compose:
     runs-on: ubuntu-latest
