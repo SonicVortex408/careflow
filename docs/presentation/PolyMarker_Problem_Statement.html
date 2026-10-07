@@ -115,7 +115,7 @@ h1,h2,.quote{text-shadow:0 2px 24px rgba(4,19,27,.75)}
 .core{position:absolute;z-index:20;width:120px;height:120px;left:-60px;top:-60px;border-radius:50%;display:grid;place-items:center;text-align:center;
   background:radial-gradient(circle at 35% 30%,#ff9aa9,#e11d48 60%,#7f1029);box-shadow:0 0 60px rgba(251,113,133,.55);font:700 1em 'Space Grotesk',Inter,system-ui,sans-serif}
 /* loop */
-.loop{width:min(300px,70vw);display:block;margin:0 auto;overflow:visible}
+.loop{width:min(380px,78vw);display:block;margin:0 auto;overflow:visible}
 /* ui */
 #ui{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);z-index:5;display:flex;justify-content:center;align-items:center;gap:14px}
 #ui button{width:44px;height:44px;border-radius:50%;border:1px solid var(--bd);background:rgba(4,19,27,.6);color:var(--fg);font-size:18px;cursor:pointer;backdrop-filter:blur(8px)}
@@ -131,6 +131,12 @@ h1,h2,.quote{text-shadow:0 2px 24px rgba(4,19,27,.75)}
 .replay{align-self:flex-start;justify-self:start;width:max-content;font:600 .8em Inter,system-ui,sans-serif;color:var(--teal);background:transparent;border:1px solid rgba(45,212,191,.4);border-radius:99px;padding:6px 14px;cursor:pointer}
 .replay:hover{background:rgba(45,212,191,.12)}
 .foot{font-size:.78em;color:var(--dim)}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(10px,1.4vw,16px)}
+.g3 .card{flex:none}
+.sym{display:grid;gap:12px;max-width:460px}.sym .card{display:grid;grid-template-columns:42px 1fr;column-gap:14px;align-items:center;padding:14px 18px}.sym .ico{margin:0;grid-row:span 2}.sym h3{margin:0}
+.big.sm{font-size:clamp(34px,4.2vw,58px)}
+.ecg .pulse{filter:drop-shadow(0 0 6px rgba(255,255,255,.8))}
+@media(max-width:640px){.g3{grid-template-columns:1fr}}
 @media(max-width:980px){.flips{grid-template-columns:repeat(2,minmax(0,1fr))}.flip:last-child{grid-column:span 2}}
 @media(max-width:640px){#dots{gap:5px}#dots i{width:6px;height:6px}#dots i.on{width:16px}.s{padding:9vh 6vw 15vh}.mr{grid-template-columns:1fr;gap:6px}.mr .ln{display:none}.flips{grid-template-columns:1fr}.flip:last-child{grid-column:auto}#num{display:none}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -149,7 +155,7 @@ h1,h2,.quote{text-shadow:0 2px 24px rgba(4,19,27,.75)}
   <h1><span class="split grad">Normal results.</span><br><span class="split">Still unwell.</span></h1>
   <svg class="ecg" viewBox="0 0 760 90" data-a aria-hidden="true">
     <defs><linearGradient id="eg" x1="0" x2="1"><stop offset="0" stop-color="#34d399"/><stop offset=".6" stop-color="#38bdf8"/><stop offset="1" stop-color="#fb7185"/></linearGradient></defs>
-    <path id="ecgBase" d="M0 50 H160 l14 -8 l10 8 H230 l10 -36 l14 76 l12 -56 l8 16 H360 l16 -10 l12 10 H470 l10 -36 l14 76 l12 -56 l8 16 H600 l16 -10 l12 10 H760" stroke="rgba(255,255,255,.10)" stroke-width="3"/>
+    <path id="ecgBase" d="M0 50 H160 l14 -8 l10 8 H230 l10 -36 l14 76 l12 -56 l8 16 H360 l16 -10 l12 10 H470 l10 -36 l14 76 l12 -56 l8 16 H600 l16 -10 l12 10 H760" stroke="rgba(255,255,255,.16)" stroke-width="3"/>
     <path id="ecgLine" d="M0 50 H160 l14 -8 l10 8 H230 l10 -36 l14 76 l12 -56 l8 16 H360 l16 -10 l12 10 H470 l10 -36 l14 76 l12 -56 l8 16 H600 l16 -10 l12 10 H760" stroke="url(#eg)" stroke-width="3.5"/>
   </svg>
   <p class="lead" data-a>Why thyroid and micronutrient lab reports leave patients without answers, and what a scalable big-data system must do about it.</p>
@@ -162,7 +168,7 @@ h1,h2,.quote{text-shadow:0 2px 24px rgba(4,19,27,.75)}
   <div class="eb" data-a>A familiar story</div>
   <h2 data-a>She feels exhausted, foggy and is losing hair. Her report says <span class="hm">everything is normal</span>.</h2>
   <div class="cols">
-    <div class="row">
+    <div class="sym">
       <div class="card tilt" data-a><div class="ico c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2"/><path d="M6 11v2"/></svg></div><h3>Tiredness 8 / 10</h3><small>Every afternoon, for months</small></div>
       <div class="card tilt" data-a><div class="ico sk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9Z"/></svg></div><h3>Brain fog: often</h3><small>Losing words, losing focus</small></div>
       <div class="card tilt" data-a><div class="ico l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 3c0 6 3 8 3 18"/><path d="M12 3c0 6 2 8 2 18"/><path d="M18 3c0 6-2 8-2 18"/></svg></div><h3>Hair loss: mild</h3><small>Noticeably thinner</small></div>
@@ -355,8 +361,8 @@ h1,h2,.quote{text-shadow:0 2px 24px rgba(4,19,27,.75)}
       <div class="card" data-a><span class="tag">User roles</span>
         <div class="row" style="margin-top:8px"><span class="chip"><i></i>Patient</span><span class="chip"><i style="background:var(--sky);box-shadow:0 0 10px var(--sky)"></i>Clinician</span><span class="chip"><i style="background:var(--coral);box-shadow:0 0 10px var(--coral)"></i>Admin</span></div></div>
       <div class="row">
-        <div class="card" data-a><div class="big hm" data-n="50000">0</div><small>synthetic patients</small></div>
-        <div class="card" data-a><div class="big hs" data-n="5">0</div><small>lab dialects</small></div>
+        <div class="card" data-a style="flex:1 1 150px"><div class="big sm hm" data-n="50000">0</div><small>synthetic patients</small></div>
+        <div class="card" data-a style="flex:1 1 120px"><div class="big sm hs" data-n="5">0</div><small>lab dialects</small></div>
       </div>
     </div>
   </div>
@@ -373,16 +379,19 @@ h1,h2,.quote{text-shadow:0 2px 24px rgba(4,19,27,.75)}
       <div class="row" data-a><span class="chip">Next: de-identified real data</span><span class="chip">Pre-registered thresholds</span><span class="chip">External validation</span></div>
     </div>
     <div data-a>
-      <svg class="loop" viewBox="0 0 260 260" aria-hidden="true">
+      <svg class="loop" viewBox="0 0 300 300" aria-hidden="true">
+        <circle cx="150" cy="150" r="128" fill="rgba(251,191,36,.05)" stroke="rgba(251,191,36,.18)" stroke-width="1"/>
         <g id="loopG">
-          <circle cx="130" cy="130" r="92" fill="none" stroke="rgba(251,191,36,.35)" stroke-width="3" stroke-dasharray="10 9"/>
-          <path d="M214 112 l8 18 l-20 -2" fill="none" stroke="#fbbf24" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M46 148 l-8 -18 l20 2" fill="none" stroke="#fbbf24" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="150" cy="150" r="112" fill="none" stroke="rgba(251,191,36,.45)" stroke-width="3" stroke-dasharray="12 10"/>
+          <path d="M252 128 l10 20 l-22 -1" fill="none" stroke="#fbbf24" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M48 172 l-10 -20 l22 1" fill="none" stroke="#fbbf24" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
         </g>
-        <text x="130" y="68" text-anchor="middle" fill="#f1fbf9" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="600">markers</text>
-        <text x="130" y="202" text-anchor="middle" fill="#f1fbf9" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="600">model recovers</text>
-        <text x="130" y="126" text-anchor="middle" fill="#fbbf24" font-family="Space Grotesk, Inter, sans-serif" font-size="24" font-weight="700">R2</text>
-        <text x="130" y="148" text-anchor="middle" fill="#a3c2c7" font-family="Inter, system-ui, sans-serif" font-size="11">circularity</text>
+        <text x="150" y="84" text-anchor="middle" fill="#f1fbf9" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="600">markers</text>
+        <text x="150" y="101" text-anchor="middle" fill="#a3c2c7" font-family="Inter, system-ui, sans-serif" font-size="11">generate symptoms</text>
+        <text x="150" y="146" text-anchor="middle" fill="#fbbf24" font-family="Space Grotesk, Inter, sans-serif" font-size="30" font-weight="700">R2</text>
+        <text x="150" y="166" text-anchor="middle" fill="#a3c2c7" font-family="Inter, system-ui, sans-serif" font-size="11">circularity</text>
+        <text x="150" y="208" text-anchor="middle" fill="#f1fbf9" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="600">model recovers</text>
+        <text x="150" y="225" text-anchor="middle" fill="#a3c2c7" font-family="Inter, system-ui, sans-serif" font-size="11">the same thresholds</text>
       </svg>
     </div>
   </div>
@@ -404,10 +413,11 @@ h1,h2,.quote{text-shadow:0 2px 24px rgba(4,19,27,.75)}
 <section class="s" data-anim="ecg title">
   <h1><span class="split grad">Thank you</span></h1>
   <svg class="ecg" viewBox="0 0 760 90" data-a aria-hidden="true">
-    <path d="M0 50 H160 l14 -8 l10 8 H230 l10 -36 l14 76 l12 -56 l8 16 H360 l16 -10 l12 10 H470 l10 -36 l14 76 l12 -56 l8 16 H600 l16 -10 l12 10 H760" stroke="rgba(255,255,255,.10)" stroke-width="3"/>
+    <path d="M0 50 H160 l14 -8 l10 8 H230 l10 -36 l14 76 l12 -56 l8 16 H360 l16 -10 l12 10 H470 l10 -36 l14 76 l12 -56 l8 16 H600 l16 -10 l12 10 H760" stroke="rgba(255,255,255,.16)" stroke-width="3"/>
     <path class="ecgL" d="M0 50 H160 l14 -8 l10 8 H230 l10 -36 l14 76 l12 -56 l8 16 H360 l16 -10 l12 10 H470 l10 -36 l14 76 l12 -56 l8 16 H600 l16 -10 l12 10 H760" stroke="url(#eg)" stroke-width="3.5"/>
   </svg>
   <p class="lead" data-a>Questions?</p>
+  <div class="row" data-a><span class="chip"><i></i>Riya Pataskar</span><span class="chip">Joshua Naidu</span><span class="chip">Sarah Fernandes</span><span class="chip">PolyMarker Analytics · 2026</span></div>
   <p class="foot" data-a>All population-level results are derived from synthetic data, for research/demo purposes, not clinical guidance.</p>
 </section>
 
@@ -528,16 +538,16 @@ if(ok3){
 
 /* ---------- per-slide animations ---------- */
 var A={};
-A.ecg=function(s){s.querySelectorAll('#ecgLine,.ecgL').forEach(function(p){var L=p.getTotalLength();
-  G.killTweensOf(p);
-  G.fromTo(p,{strokeDasharray:L+' '+L,strokeDashoffset:L},{strokeDashoffset:0,duration:2.4,ease:'power2.inOut',
-    onComplete:function(){G.fromTo(p,{strokeDashoffset:L},{strokeDashoffset:-L,duration:3,ease:'none',repeat:-1})}})})};
+A.ecg=function(s){s.querySelectorAll('#ecgLine,.ecgL').forEach(function(p){var L=p.getTotalLength(),pl=p.parentNode.querySelector('.pulse');
+  if(!pl){pl=p.cloneNode();pl.removeAttribute('id');pl.setAttribute('class','pulse');pl.setAttribute('stroke','#ffffff');pl.setAttribute('stroke-width','4');p.parentNode.appendChild(pl)}
+  G.killTweensOf([p,pl]);G.set(pl,{opacity:0});
+  G.fromTo(p,{strokeDasharray:L+' '+L,strokeDashoffset:L},{strokeDashoffset:0,duration:2.2,ease:'power2.inOut',
+    onComplete:function(){G.set(pl,{opacity:.9,strokeDasharray:'90 '+L});G.fromTo(pl,{strokeDashoffset:90},{strokeDashoffset:-L,duration:2.6,ease:'none',repeat:-1,repeatDelay:.4})}})})};
 A.title=function(){};
 A.story=function(s){var rows=s.querySelectorAll('.sr');G.fromTo(rows,{x:30,opacity:0},{x:0,opacity:1,duration:.5,stagger:.08,ease:'back.out(1.6)',delay:.4});
   G.fromTo('#storyVerdict',{scale:.6,opacity:0},{scale:1,opacity:1,duration:.8,ease:'elastic.out(1,.5)',delay:1.3})};
-A.flips=function(s){var f=s.querySelectorAll('.flip .in');
-  G.to(f,{rotationY:180,duration:.9,ease:'back.inOut(1.4)',stagger:.15,delay:1.1});
-  G.to(f,{rotationY:0,duration:.9,ease:'back.inOut(1.4)',stagger:.15,delay:3.2})};
+A.flips=function(s){var f=s.querySelectorAll('.flip .in'),tl=G.timeline({delay:1.2});G.killTweensOf(f);G.set(f,{rotationY:0});
+  f.forEach(function(c,i){tl.to(c,{rotationY:180,duration:.7,ease:'back.out(1.6)'},i*.55).to(c,{rotationY:0,duration:.7,ease:'back.out(1.6)'},i*.55+1.1)})};
 document.querySelectorAll('.flip').forEach(function(f){var inn=f.querySelector('.in'),up=false;
   function to(v){if(G)G.to(inn,{rotationY:v,duration:.8,ease:'back.out(1.6)'});else inn.style.transform='rotateY('+v+'deg)'}
   f.addEventListener('mouseenter',function(){to(180)});f.addEventListener('mouseleave',function(){to(0)});
@@ -594,7 +604,7 @@ A.orbit=function(s){G.killTweensOf([orbitState,'.core']);
   G.to(orbitState,{r:'+=360',duration:22,ease:'none',repeat:-1,onUpdate:function(){placeOrbit(orbitState.r)}});
   G.fromTo('.core',{scale:.6},{scale:1,duration:1.2,ease:'elastic.out(1,.4)',delay:.2});
   G.to('.core',{scale:1.06,duration:.5,yoyo:true,repeat:-1,ease:'sine.inOut',delay:1.5})};
-A.loop=function(){G.killTweensOf('#loopG');G.fromTo('#loopG',{rotation:0,transformOrigin:'130px 130px'},{rotation:360,duration:10,ease:'none',repeat:-1})};
+A.loop=function(){G.killTweensOf('#loopG');G.fromTo('#loopG',{rotation:0,svgOrigin:'150 150'},{rotation:360,duration:10,ease:'none',repeat:-1})};
 
 function common(s){
   s.querySelectorAll('[data-n]').forEach(function(n){var v=+n.dataset.n,d=+n.dataset.d||0,o={v:0};
